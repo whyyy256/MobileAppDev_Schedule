@@ -1,0 +1,154 @@
+/* pages/addCourse/addCourse.wxss */
+page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f5f5;
+}
+
+.scrollarea {
+  flex: 1;
+  overflow-y: hidden;
+}
+
+.container {
+  padding: 20rpx 30rpx;
+  padding-bottom: 60rpx;
+}
+
+.section {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 24rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.week-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+.action-btn {
+  font-size: 24rpx;
+  color: #07c160;
+  font-weight: normal;
+}
+
+.form-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.form-item:last-child {
+  border-bottom: none;
+}
+
+.label {
+  font-size: 28rpx;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.input {
+  flex: 1;
+  text-align: right;
+  font-size: 28rpx;
+  color: #333;
+  margin-left: 30rpx;
+}
+
+.picker {
+  font-size: 28rpx;
+  color: #333;
+  padding: 10rpx 20rpx;
+  background: #f5f5f5;
+  border-radius: 8rpx;
+}
+
+.week-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.week-item {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.week-item.selected {
+  background: #07c160;
+  color: #fff;
+}
+
+.week-summary {
+  margin-top: 20rpx;
+  font-size: 24rpx;
+  color: #999;
+  text-align: center;
+}
+
+.color-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
+
+.color-item {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  transition: all 0.2s;
+  border: 4rpx solid transparent;
+}
+
+.color-item.selected {
+  border-color: #333;
+  transform: scale(1.1);
+}
+
+.actions {
+  margin-top: 40rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.btn-save {
+  background: #07c160;
+  color: #fff;
+  border-radius: 12rpx;
+  font-size: 32rpx;
+  padding: 24rpx;
+}
+
+.btn-delete {
+  background: #fff;
+  color: #ee0a24;
+  border: 2rpx solid #ee0a24;
+  border-radius: 12rpx;
+  font-size: 32rpx;
+  padding: 24rpx;
+}

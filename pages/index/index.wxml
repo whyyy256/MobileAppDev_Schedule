@@ -1,7 +1,68 @@
 <!--index.wxml-->
-<navigation-bar title="Weixin" back="{{false}}" color="black" background="#FFF"></navigation-bar>
-<scroll-view class="scrollarea" scroll-y type="list">
-  <view class="container">
-    Weixin
+<navigation-bar title="课程表" back="{{false}}" color="black" background="#FFF"></navigation-bar>
+
+<view class="container">
+  <!-- 周次切换 -->
+  <view class="week-switcher">
+    <view class="week-nav" bindtap="onPrevWeek">
+      <text class="nav-icon">‹</text>
+    </view>
+    <picker mode="selector" range="{{totalWeeks}}" value="{{currentWeek - 1}}" bindchange="onWeekChange">
+      <view class="week-display">第 {{currentWeek}} 周</view>
+    </picker>
+    <view class="week-nav" bindtap="onNextWeek">
+      <text class="nav-icon">›</text>
+    </view>
   </view>
-</scroll-view>
+
+  <!-- 课程表 -->
+  <view class="schedule-container">
+    <!-- 星期标题 -->
+    <view class="schedule-header" style="grid-template-columns: 80rpx repeat({{showDays}}, 1fr);">
+      <view class="header-cell"></view>
+      <view class="header-cell" wx:for="{{dayHeaders}}" wx:key="*this">
+        {{item}}
+      </view>
+    </view>
+
+    <!-- 课程网格 -->
+    <scroll-view class="schedule-content" scroll-x scroll-y>
+      <view class="schedule-grid" style="grid-template-columns: 80rpx repeat({{showDays}}, 1fr);">
+        <!-- 节次列 -->
+        <view class="lesson-numbers">
+          <view class="lesson-number" wx:for="{{lessonNumbers}}" wx:key="*this">
+            {{item}}
+          </view>
+        </view>
+
+        <!-- 课程格子 -->
+        <view class="schedule-cells">
+          <block wx:for="{{scheduleData}}" wx:key="day">
+            <view class="day-column">
+              <view
+                wx:for="{{item.cells}}"
+                wx:for-item="cell"
+                wx:for-index="cellIdx"
+                wx:key="cellIdx"
+                class="cell {{cell.course ? 'has-course' : ''}}"
+                style="{{cell.course ? 'background-color: ' + cell.course.color + ';' : ''}} {{cell.rowSpan > 1 ? 'grid-row: span ' + cell.rowSpan : ''}}"
+                data-course="{{cell.course}}"
+                bindtap="onCourseTap"
+              >
+                <view wx:if="{{cell.course}}" class="cell-content">
+                  <text class="cell-name">{{cell.course.name}}</text>
+                  <text class="cell-location">{{cell.course.location}}</text>
+                </view>
+              </view>
+            </view>
+          </block>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 添加按钮 -->
+  <view class="add-btn" bindtap="onAddCourse">
+    <text class="add-icon">+</text>
+  </view>
+</view>

@@ -1,0 +1,108 @@
+<!--pages/addCourse/addCourse.wxml-->
+<navigation-bar title="{{isEdit ? '编辑课程' : '添加课程'}}" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="container">
+    <!-- 基本信息 -->
+    <view class="section">
+      <view class="section-title">基本信息</view>
+
+      <view class="form-item">
+        <text class="label">课程名称</text>
+        <input class="input" placeholder="请输入课程名称" value="{{courseName}}" bindinput="onCourseNameInput" />
+      </view>
+
+      <view class="form-item">
+        <text class="label">授课教师</text>
+        <input class="input" placeholder="请输入教师姓名" value="{{teacher}}" bindinput="onTeacherInput" />
+      </view>
+
+      <view class="form-item">
+        <text class="label">上课地点</text>
+        <input class="input" placeholder="请输入教室地点" value="{{location}}" bindinput="onLocationInput" />
+      </view>
+    </view>
+
+    <!-- 上课时间 -->
+    <view class="section">
+      <view class="section-title">上课时间</view>
+
+      <view class="form-item">
+        <text class="label">星期</text>
+        <picker mode="selector" range="{{dayOptions}}" value="{{day - 1}}" bindchange="onDayChange">
+          <view class="picker">
+            {{dayOptions[day - 1]}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <text class="label">开始节次</text>
+        <picker mode="selector" range="{{lessonOptions}}" value="{{startLesson - 1}}" bindchange="onStartLessonChange">
+          <view class="picker">
+            第 {{startLesson}} 节
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <text class="label">连续节数</text>
+        <picker mode="selector" range="{{lessonOptions}}" value="{{lessonCount - 1}}" bindchange="onLessonCountChange">
+          <view class="picker">
+            {{lessonCount}} 节
+          </view>
+        </picker>
+      </view>
+    </view>
+
+    <!-- 上课周次 -->
+    <view class="section">
+      <view class="section-title">
+        <text>上课周次</text>
+        <view class="week-actions">
+          <text class="action-btn" bindtap="onSelectAllWeeks">全选</text>
+          <text class="action-btn" bindtap="onOddWeeks">单周</text>
+          <text class="action-btn" bindtap="onEvenWeeks">双周</text>
+          <text class="action-btn" bindtap="onClearWeeks">清空</text>
+        </view>
+      </view>
+
+      <view class="week-grid">
+        <view
+          wx:for="{{weekOptions}}"
+          wx:key="*this"
+          class="week-item {{weeks && weeks.indexOf(item) > -1 ? 'selected' : ''}}"
+          data-week="{{item}}"
+          bindtap="onWeekToggle"
+        >
+          {{item}}
+        </view>
+      </view>
+
+      <view class="week-summary" wx:if="{{weeks.length > 0}}">
+        已选择 {{weeks.length}} 周
+      </view>
+    </view>
+
+    <!-- 课程颜色 -->
+    <view class="section">
+      <view class="section-title">课程颜色</view>
+      <view class="color-grid">
+        <view
+          wx:for="{{colorOptions}}"
+          wx:key="*this"
+          class="color-item {{color === item ? 'selected' : ''}}"
+          style="background-color: {{item}}"
+          data-color="{{item}}"
+          bindtap="onColorSelect"
+        ></view>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="actions">
+      <button class="btn-save" bindtap="onSave">{{isEdit ? '保存修改' : '添加课程'}}</button>
+      <button class="btn-delete" wx:if="{{isEdit}}" bindtap="onDelete">删除课程</button>
+    </view>
+  </view>
+</scroll-view>
