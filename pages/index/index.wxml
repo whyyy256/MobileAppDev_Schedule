@@ -5,6 +5,9 @@
   color="black"
   background="#FFF"
 >
+  <view slot="left" class="nav-left" bindtap="onSettingsTap">
+    <text class="nav-settings-icon">⚙</text>
+  </view>
   <view slot="center" class="nav-center">
     <text class="nav-week-nav {{currentWeek <= 1 ? 'disabled' : ''}}" bindtap="onPrevWeek">‹</text>
     <view class="nav-week-text" bindtap="showWeekPicker">第 {{currentWeek}} 周</view>

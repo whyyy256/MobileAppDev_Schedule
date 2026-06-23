@@ -17,6 +17,20 @@ page {
   height: auto !important;
 }
 
+/* ======= 导航栏左侧设置入口 ======= */
+.nav-left {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 16rpx;
+}
+
+.nav-settings-icon {
+  font-size: 40rpx;
+  color: #333;
+  line-height: 1;
+}
+
 /* ======= 导航栏中间周次切换 ======= */
 .nav-center {
   display: flex;

@@ -138,6 +138,11 @@ Page({
     this.buildScheduleData()
   },
 
+  // 从设置页返回后需要重新加载
+  onShow() {
+    this.loadSettings()
+  },
+
   buildScheduleData() {
     const { currentWeek, courses, showDays, cellHeight } = this.data
     const weekCourses = util.getCoursesByWeek(courses, currentWeek)
@@ -312,6 +317,10 @@ Page({
     if (course) {
       wx.navigateTo({ url: `/pages/addCourse/addCourse?id=${course.id}` })
     }
+  },
+
+  onSettingsTap() {
+    wx.navigateTo({ url: '/pages/settings/settings' })
   },
 
   onAddCourse() {

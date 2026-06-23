@@ -37,10 +37,189 @@ const COURSE_COLORS = [
   '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52BE80'
 ]
 
-// 保存课程列表
-function saveCourses(courses) {
+// ====== 学期管理 ======
+function getCurrentSemesterId() {
   try {
-    wx.setStorageSync('courses', courses)
+    return wx.getStorageSync('currentSemesterId') || 'default'
+  } catch (e) {
+    return 'default'
+  }
+}
+
+function setCurrentSemesterId(id) {
+  try {
+    wx.setStorageSync('currentSemesterId', id)
+    return true
+  } catch (e) {
+    console.error('切换学期失败', e)
+    return false
+  }
+}
+
+function getSemesters() {
+  try {
+    return wx.getStorageSync('semesters') || []
+  } catch (e) {
+    console.error('读取学期列表失败', e)
+    return []
+  }
+}
+
+function saveSemesters(semesters) {
+  try {
+    wx.setStorageSync('semesters', semesters)
+    return true
+  } catch (e) {
+    console.error('保存学期列表失败', e)
+    return false
+  }
+}
+
+function ensureDefaultSemester() {
+  const semesters = getSemesters()
+  if (semesters.length === 0) {
+    const defaultSemester = {
+      id: 'default',
+      name: DEFAULT_SETTINGS.semesterName,
+      startDate: DEFAULT_SETTINGS.startDate,
+      totalWeeks: DEFAULT_SETTINGS.totalWeeks,
+      createdAt: Date.now()
+    }
+    saveSemesters([defaultSemester])
+    saveSettings(DEFAULT_SETTINGS, 'default')
+    setCurrentSemesterId('default')
+  }
+}
+
+function createSemester(name, startDate, totalWeeks) {
+  ensureDefaultSemester()
+
+  const id = 'sem_' + Date.now()
+  const semesters = getSemesters()
+  const newSemester = {
+    id,
+    name: name || `新学期 ${semesters.length + 1}`,
+    startDate: startDate || DEFAULT_SETTINGS.startDate,
+    totalWeeks: totalWeeks || DEFAULT_SETTINGS.totalWeeks,
+    createdAt: Date.now()
+  }
+
+  // 保存当前学期到历史后再切换
+  const currentId = getCurrentSemesterId()
+  const currentIndex = semesters.findIndex(s => s.id === currentId)
+  if (currentIndex > -1) {
+    const currentSettings = getSettingsRaw(currentId)
+    semesters[currentIndex] = {
+      ...semesters[currentIndex],
+      name: currentSettings.semesterName,
+      startDate: currentSettings.startDate,
+      totalWeeks: currentSettings.totalWeeks
+    }
+  }
+
+  semesters.push(newSemester)
+  saveSemesters(semesters)
+
+  // 为新学期生成默认设置
+  const newSettings = {
+    ...DEFAULT_SETTINGS,
+    semesterName: newSemester.name,
+    startDate: newSemester.startDate,
+    totalWeeks: newSemester.totalWeeks
+  }
+  saveSettings(newSettings, id)
+  setCurrentSemesterId(id)
+
+  return newSemester
+}
+
+function switchSemester(id) {
+  const semesters = getSemesters()
+  if (!semesters.find(s => s.id === id)) return false
+
+  // 同步当前学期 meta 到列表
+  const currentId = getCurrentSemesterId()
+  const currentIndex = semesters.findIndex(s => s.id === currentId)
+  if (currentIndex > -1) {
+    const currentSettings = getSettingsRaw(currentId)
+    semesters[currentIndex] = {
+      ...semesters[currentIndex],
+      name: currentSettings.semesterName,
+      startDate: currentSettings.startDate,
+      totalWeeks: currentSettings.totalWeeks
+    }
+    saveSemesters(semesters)
+  }
+
+  setCurrentSemesterId(id)
+  return true
+}
+
+function updateSemesterMeta(id, meta) {
+  const semesters = getSemesters()
+  const index = semesters.findIndex(s => s.id === id)
+  if (index === -1) return false
+  semesters[index] = { ...semesters[index], ...meta }
+  saveSemesters(semesters)
+  return true
+}
+
+function deleteSemester(id) {
+  let semesters = getSemesters()
+  if (semesters.length <= 1) return false
+  semesters = semesters.filter(s => s.id !== id)
+  saveSemesters(semesters)
+
+  try {
+    wx.removeStorageSync(`settings_${id}`)
+    wx.removeStorageSync(`courses_${id}`)
+  } catch (e) {}
+
+  if (getCurrentSemesterId() === id) {
+    setCurrentSemesterId(semesters[0].id)
+  }
+  return true
+}
+
+// ====== 设置 ======
+function getSettingsRaw(semesterId) {
+  const id = semesterId || getCurrentSemesterId()
+  try {
+    const s = wx.getStorageSync(`settings_${id}`)
+    return s || DEFAULT_SETTINGS
+  } catch (e) {
+    return DEFAULT_SETTINGS
+  }
+}
+
+function getSettings(semesterId) {
+  ensureDefaultSemester()
+  return getSettingsRaw(semesterId)
+}
+
+function saveSettings(settings, semesterId) {
+  const id = semesterId || getCurrentSemesterId()
+  try {
+    wx.setStorageSync(`settings_${id}`, settings)
+
+    // 同步更新学期列表中的 meta
+    updateSemesterMeta(id, {
+      name: settings.semesterName,
+      startDate: settings.startDate,
+      totalWeeks: settings.totalWeeks
+    })
+    return true
+  } catch (e) {
+    console.error('保存设置失败', e)
+    return false
+  }
+}
+
+// 保存课程列表
+function saveCourses(courses, semesterId) {
+  const id = semesterId || getCurrentSemesterId()
+  try {
+    wx.setStorageSync(`courses_${id}`, courses)
     return true
   } catch (e) {
     console.error('保存课程失败', e)
@@ -49,47 +228,58 @@ function saveCourses(courses) {
 }
 
 // 获取课程列表
-function getCourses() {
+function getCourses(semesterId) {
+  const id = semesterId || getCurrentSemesterId()
   try {
-    return wx.getStorageSync('courses') || []
+    return wx.getStorageSync(`courses_${id}`) || []
   } catch (e) {
     console.error('读取课程失败', e)
     return []
   }
 }
 
-// 保存设置
-function saveSettings(settings) {
-  try {
-    wx.setStorageSync('settings', settings)
-    return true
-  } catch (e) {
-    console.error('保存设置失败', e)
-    return false
+// 根据一节课时间推算下一节课时间
+function addMinutes(timeStr, minutes) {
+  const [h, m] = timeStr.split(':').map(Number)
+  const date = new Date(2000, 0, 1, h, m + minutes)
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+function generateLessonTime(lesson, prev, settings) {
+  const s = settings || getSettings()
+  const classMinutes = s.lessonDuration.classMinutes || 45
+  const breakMinutes = s.lessonDuration.breakMinutes || 10
+  const section = lesson <= (s.lessonsPerDay.morning || 0) ? 'morning'
+    : lesson <= (s.lessonsPerDay.morning || 0) + (s.lessonsPerDay.afternoon || 0) ? 'afternoon'
+      : 'evening'
+
+  if (!prev) {
+    const defaultTime = DEFAULT_SETTINGS.lessonTimes.find(t => t.lesson === lesson)
+    return defaultTime || { lesson, start: '08:00', end: addMinutes('08:00', classMinutes), section }
+  }
+
+  const start = addMinutes(prev.end, breakMinutes)
+  return {
+    lesson,
+    start,
+    end: addMinutes(start, classMinutes),
+    section
   }
 }
 
-// 获取设置
-function getSettings() {
-  try {
-    const settings = wx.getStorageSync('settings')
-    return settings || DEFAULT_SETTINGS
-  } catch (e) {
-    console.error('读取设置失败', e)
-    return DEFAULT_SETTINGS
-  }
-}
-
-// 获取完整的课程时间表（合并用户自定义与默认）
+// 获取完整的课程时间表（合并用户自定义与默认，不足时自动推算）
 function getLessonTimes(settings) {
   const s = settings || getSettings()
-  const defaults = DEFAULT_SETTINGS.lessonTimes
+  const totalLessons = (s.lessonsPerDay.morning || 0) + (s.lessonsPerDay.afternoon || 0) + (s.lessonsPerDay.evening || 0)
   const customs = s.lessonTimes || []
 
-  return defaults.map(def => {
-    const custom = customs.find(c => c.lesson === def.lesson)
-    return custom ? { ...def, ...custom } : def
-  })
+  const result = []
+  for (let i = 1; i <= totalLessons; i++) {
+    const custom = customs.find(c => c.lesson === i)
+    const def = generateLessonTime(i, result[i - 2], s)
+    result.push(custom ? { ...def, ...custom } : def)
+  }
+  return result
 }
 
 // 生成唯一ID
@@ -214,6 +404,14 @@ function getDayName(day) {
 module.exports = {
   DEFAULT_SETTINGS,
   COURSE_COLORS,
+  getCurrentSemesterId,
+  setCurrentSemesterId,
+  getSemesters,
+  saveSemesters,
+  createSemester,
+  switchSemester,
+  updateSemesterMeta,
+  deleteSemester,
   saveCourses,
   getCourses,
   saveSettings,

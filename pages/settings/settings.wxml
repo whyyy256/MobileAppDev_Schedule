@@ -1,0 +1,146 @@
+<!--pages/settings/settings.wxml-->
+<navigation-bar title="学期设置" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="container">
+
+    <!-- 当前学期 -->
+    <view class="section">
+      <view class="section-title">当前学期</view>
+
+      <view class="form-item">
+        <text class="label">学期名称</text>
+        <input class="input" placeholder="如：2024-2025学年第一学期" value="{{semesterName}}" bindinput="onNameInput" />
+      </view>
+
+      <view class="form-item">
+        <text class="label">开学日期</text>
+        <view class="picker" data-mode="current" bindtap="openDatePicker">{{startDate || '请选择'}}</view>
+      </view>
+
+      <view class="form-item">
+        <text class="label">学期总周数</text>
+        <input class="input number" type="number" value="{{totalWeeks}}" bindinput="onWeeksInput" />
+      </view>
+
+      <view class="form-item">
+        <text class="label">显示周末</text>
+        <switch checked="{{showWeekend}}" bindchange="onWeekendChange" />
+      </view>
+    </view>
+
+    <!-- 一天有几节课 -->
+    <view class="section">
+      <view class="section-title">每天课程节数</view>
+
+      <view class="form-item">
+        <text class="label">上午节数</text>
+        <input class="input number" type="number" value="{{morning}}" bindinput="onMorningInput" />
+      </view>
+
+      <view class="form-item">
+        <text class="label">下午节数</text>
+        <input class="input number" type="number" value="{{afternoon}}" bindinput="onAfternoonInput" />
+      </view>
+
+      <view class="form-item">
+        <text class="label">晚上节数</text>
+        <input class="input number" type="number" value="{{evening}}" bindinput="onEveningInput" />
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="btn primary" bindtap="saveSettings">保存设置</view>
+    <view class="btn" bindtap="showNewSemesterDialog">新建新学期</view>
+    <view class="btn" bindtap="showHistoryDialog">查看历史学期</view>
+
+  </view>
+</scroll-view>
+
+<!-- 自定义日期选择弹窗 -->
+<view class="date-picker-mask" wx:if="{{showDatePicker}}" bindtap="hideDatePicker">
+  <view class="date-picker-panel" catchtap="stopBubbling">
+    <view class="date-picker-header">
+      <text class="picker-cancel" bindtap="hideDatePicker">取消</text>
+      <text class="date-picker-title">选择日期</text>
+      <text class="picker-confirm" bindtap="confirmDatePicker">确定</text>
+    </view>
+    <view class="date-picker-body">
+      <scroll-view class="date-picker-col" scroll-y enhanced show-scrollbar="{{false}}">
+        <view
+          wx:for="{{years}}"
+          wx:key="*this"
+          class="date-picker-item {{pickerYear === item ? 'active' : ''}}"
+          data-value="{{item}}"
+          bindtap="onYearSelect"
+        >{{item}}年</view>
+      </scroll-view>
+      <scroll-view class="date-picker-col" scroll-y enhanced show-scrollbar="{{false}}">
+        <view
+          wx:for="{{months}}"
+          wx:key="*this"
+          class="date-picker-item {{pickerMonth === item ? 'active' : ''}}"
+          data-value="{{item}}"
+          bindtap="onMonthSelect"
+        >{{item}}月</view>
+      </scroll-view>
+      <scroll-view class="date-picker-col" scroll-y enhanced show-scrollbar="{{false}}">
+        <view
+          wx:for="{{days}}"
+          wx:key="*this"
+          class="date-picker-item {{pickerDay === item ? 'active' : ''}}"
+          data-value="{{item}}"
+          bindtap="onDaySelect"
+        >{{item}}日</view>
+      </scroll-view>
+    </view>
+  </view>
+</view>
+
+<!-- 新建学期弹窗 -->
+<view class="dialog-mask" wx:if="{{showNewSemester}}" bindtap="hideNewSemesterDialog">
+  <view class="dialog-panel" catchtap="stopBubbling">
+    <view class="dialog-title">新建新学期</view>
+    <view class="dialog-body">
+      <view class="dialog-row">
+        <text class="dialog-label">学期名称</text>
+        <input class="dialog-input" placeholder="请输入学期名称" value="{{newName}}" bindinput="onNewNameInput" />
+      </view>
+      <view class="dialog-row">
+        <text class="dialog-label">开学日期</text>
+        <view class="dialog-picker" data-mode="new" bindtap="openDatePicker">{{newStartDate}}</view>
+      </view>
+      <view class="dialog-row">
+        <text class="dialog-label">总周数</text>
+        <input class="dialog-input number" type="number" value="{{newTotalWeeks}}" bindinput="onNewWeeksInput" />
+      </view>
+    </view>
+    <view class="dialog-actions">
+      <view class="dialog-btn cancel" bindtap="hideNewSemesterDialog">取消</view>
+      <view class="dialog-btn confirm" bindtap="confirmNewSemester">确定</view>
+    </view>
+  </view>
+</view>
+
+<!-- 历史学期弹窗 -->
+<view class="dialog-mask" wx:if="{{showHistory}}" bindtap="hideHistoryDialog">
+  <view class="dialog-panel history-panel" catchtap="stopBubbling">
+    <view class="dialog-title">历史学期</view>
+    <scroll-view class="history-list" scroll-y>
+      <view
+        wx:for="{{semesters}}"
+        wx:key="id"
+        class="history-item {{currentSemesterId === item.id ? 'current' : ''}}"
+      >
+        <view class="history-info" data-id="{{item.id}}" bindtap="onSwitchSemester">
+          <text class="history-name">{{item.name}}</text>
+          <text class="history-meta">{{item.startDate}} · 共 {{item.totalWeeks}} 周</text>
+        </view>
+        <view wx:if="{{currentSemesterId !== item.id}}" class="history-delete" data-id="{{item.id}}" bindtap="onDeleteSemester">删除</view>
+      </view>
+    </scroll-view>
+    <view class="dialog-actions single">
+      <view class="dialog-btn cancel" bindtap="hideHistoryDialog">关闭</view>
+    </view>
+  </view>
+</view>
