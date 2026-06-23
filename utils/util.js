@@ -14,7 +14,21 @@ const DEFAULT_SETTINGS = {
   lessonDuration: {
     classMinutes: 45, // 每节课时长
     breakMinutes: 10 // 课间休息
-  }
+  },
+  // 默认每节课上下课时间
+  lessonTimes: [
+    { lesson: 1, start: '08:00', end: '08:45', section: 'morning' },
+    { lesson: 2, start: '08:55', end: '09:40', section: 'morning' },
+    { lesson: 3, start: '10:00', end: '10:45', section: 'morning' },
+    { lesson: 4, start: '10:55', end: '11:40', section: 'morning' },
+    { lesson: 5, start: '14:00', end: '14:45', section: 'afternoon' },
+    { lesson: 6, start: '14:55', end: '15:40', section: 'afternoon' },
+    { lesson: 7, start: '16:00', end: '16:45', section: 'afternoon' },
+    { lesson: 8, start: '16:55', end: '17:40', section: 'afternoon' },
+    { lesson: 9, start: '19:00', end: '19:45', section: 'evening' },
+    { lesson: 10, start: '19:55', end: '20:40', section: 'evening' },
+    { lesson: 11, start: '20:50', end: '21:35', section: 'evening' }
+  ]
 }
 
 // 默认课程颜色列表
@@ -64,6 +78,18 @@ function getSettings() {
     console.error('读取设置失败', e)
     return DEFAULT_SETTINGS
   }
+}
+
+// 获取完整的课程时间表（合并用户自定义与默认）
+function getLessonTimes(settings) {
+  const s = settings || getSettings()
+  const defaults = DEFAULT_SETTINGS.lessonTimes
+  const customs = s.lessonTimes || []
+
+  return defaults.map(def => {
+    const custom = customs.find(c => c.lesson === def.lesson)
+    return custom ? { ...def, ...custom } : def
+  })
 }
 
 // 生成唯一ID
@@ -192,6 +218,7 @@ module.exports = {
   getCourses,
   saveSettings,
   getSettings,
+  getLessonTimes,
   generateId,
   getRandomColor,
   getCurrentWeek,

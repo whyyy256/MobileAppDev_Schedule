@@ -1,68 +1,162 @@
-<!--index.wxml-->
-<navigation-bar title="课程表" back="{{false}}" color="black" background="#FFF"></navigation-bar>
+<!--pages/index/index.wxml-->
+<navigation-bar
+  title=""
+  back="{{false}}"
+  color="black"
+  background="#FFF"
+>
+  <view slot="center" class="nav-center">
+    <text class="nav-week-nav {{currentWeek <= 1 ? 'disabled' : ''}}" bindtap="onPrevWeek">‹</text>
+    <view class="nav-week-text" bindtap="showWeekPicker">第 {{currentWeek}} 周</view>
+    <text class="nav-week-nav {{currentWeek >= totalWeeks ? 'disabled' : ''}}" bindtap="onNextWeek">›</text>
+  </view>
+</navigation-bar>
 
-<view class="container">
-  <!-- 周次切换 -->
-  <view class="week-switcher">
-    <view class="week-nav" bindtap="onPrevWeek">
-      <text class="nav-icon">‹</text>
+<!-- 自定义周次选择弹窗 -->
+<view class="week-picker-mask" wx:if="{{showWeekPicker}}" bindtap="hideWeekPicker">
+  <view class="week-picker-panel" catchtap="stopBubbling">
+    <view class="week-picker-header">
+      <text class="picker-cancel" bindtap="hideWeekPicker">取消</text>
+      <text class="picker-confirm" bindtap="confirmWeek">确定</text>
     </view>
-    <picker mode="selector" range="{{totalWeeks}}" value="{{currentWeek - 1}}" bindchange="onWeekChange">
-      <view class="week-display">第 {{currentWeek}} 周</view>
-    </picker>
-    <view class="week-nav" bindtap="onNextWeek">
-      <text class="nav-icon">›</text>
+    <scroll-view class="week-picker-list" scroll-y enhanced show-scrollbar="{{false}}">
+      <view
+        wx:for="{{weekOptions}}"
+        wx:key="*this"
+        class="week-picker-item {{tempWeek === index + 1 ? 'active' : ''}}"
+        data-week="{{index + 1}}"
+        bindtap="onWeekItemTap"
+      >{{item}}</view>
+    </scroll-view>
+  </view>
+</view>
+
+<!-- 时间编辑弹窗 -->
+<view class="time-edit-mask" wx:if="{{showTimeEdit}}" bindtap="hideTimeEdit">
+  <view class="time-edit-panel" catchtap="stopBubbling">
+    <view class="time-edit-header">
+      <text class="picker-cancel" bindtap="hideTimeEdit">取消</text>
+      <text class="time-edit-title">第 {{editLesson}} 节课</text>
+      <text class="picker-confirm" bindtap="confirmTimeEdit">确定</text>
+    </view>
+    <view class="time-edit-body">
+      <view class="time-edit-row">
+        <text class="time-edit-label">上课时间</text>
+        <picker mode="time" value="{{editStart}}" bindchange="onStartChange">
+          <view class="time-edit-value">{{editStart}}</view>
+        </picker>
+      </view>
+      <view class="time-edit-row">
+        <text class="time-edit-label">下课时间</text>
+        <picker mode="time" value="{{editEnd}}" bindchange="onEndChange">
+          <view class="time-edit-value">{{editEnd}}</view>
+        </picker>
+      </view>
     </view>
   </view>
+</view>
 
+<view class="container">
   <!-- 课程表 -->
-  <view class="schedule-container">
-    <!-- 星期标题 -->
-    <view class="schedule-header" style="grid-template-columns: 80rpx repeat({{showDays}}, 1fr);">
-      <view class="header-cell"></view>
-      <view class="header-cell" wx:for="{{dayHeaders}}" wx:key="*this">
-        {{item}}
-      </view>
+  <view class="schedule-wrap">
+
+    <!-- 顶部：固定角落 + 横向滚动的星期标题 -->
+    <view class="table-top">
+      <view class="corner-cell" style="width:{{timeColWidth}}rpx; height:{{headerHeight}}rpx;">节</view>
+      <scroll-view
+        class="header-scroll"
+        scroll-x
+        enhanced
+        show-scrollbar="{{false}}"
+        scroll-left="{{hScrollLeft}}"
+        bindscroll="onHeaderScroll"
+      >
+        <view class="header-days">
+          <view
+            class="day-cell"
+            wx:for="{{dayHeaders}}"
+            wx:key="*this"
+            style="width:{{dayColWidth}}rpx; height:{{headerHeight}}rpx;"
+          >{{item}}</view>
+        </view>
+      </scroll-view>
     </view>
 
-    <!-- 课程网格 -->
-    <scroll-view class="schedule-content" scroll-x scroll-y>
-      <view class="schedule-grid" style="grid-template-columns: 80rpx repeat({{showDays}}, 1fr);">
-        <!-- 节次列 -->
-        <view class="lesson-numbers">
-          <view class="lesson-number" wx:for="{{lessonNumbers}}" wx:key="*this">
-            {{item}}
+    <!-- 底部：固定时间列 + 双向滚动的课程网格 -->
+    <view class="table-bottom">
+      <!-- 固定左侧时间列 -->
+      <view class="time-col" style="width:{{timeColWidth}}rpx;">
+        <scroll-view
+          class="time-scroll"
+          scroll-y
+          enhanced
+          show-scrollbar="{{false}}"
+          scroll-top="{{vScrollTop}}"
+          bindscroll="onTimeScroll"
+        >
+          <view class="time-inner">
+            <view
+              wx:for="{{lessonTimes}}"
+              wx:key="lesson"
+              class="time-cell"
+              style="height:{{cellHeight}}rpx; width:{{timeColWidth}}rpx;"
+              data-lesson="{{item.lesson}}"
+              bindtap="onTimeCellTap"
+            >
+              <text class="t-num">{{item.lesson}}</text>
+              <text class="t-time">{{item.start}}</text>
+              <text class="t-time">{{item.end}}</text>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <!-- 右侧网格（双向滚动） -->
+      <scroll-view
+        class="grid-scroll"
+        scroll-x
+        scroll-y
+        enhanced
+        show-scrollbar="{{false}}"
+        scroll-left="{{gScrollLeft}}"
+        scroll-top="{{gScrollTop}}"
+        bindscroll="onGridScroll"
+      >
+        <view class="grid-area">
+          <view
+            class="day-col"
+            wx:for="{{dayColumns}}"
+            wx:key="day"
+            style="width:{{dayColWidth}}rpx;"
+          >
+            <!-- 空格子辅助线 -->
+            <view
+              wx:for="{{totalLessons}}"
+              wx:for-index="idx"
+              wx:key="idx"
+              class="cell-line"
+              style="height:{{cellHeight}}rpx;"
+            ></view>
+
+            <!-- 课程卡片 -->
+            <view
+              wx:for="{{item.courses}}"
+              wx:for-item="c"
+              wx:key="id"
+              class="course-card"
+              style="top:{{c.top}}rpx; height:{{c.height}}rpx; background:{{c.color}};"
+              data-course="{{c}}"
+              catchtap="onCourseTap"
+            >
+              <text class="c-name">{{c.name}}</text>
+              <text class="c-loc" wx:if="{{c.location}}">@{{c.location}}</text>
+            </view>
           </view>
         </view>
-
-        <!-- 课程格子 -->
-        <view class="schedule-cells">
-          <block wx:for="{{scheduleData}}" wx:key="day">
-            <view class="day-column">
-              <view
-                wx:for="{{item.cells}}"
-                wx:for-item="cell"
-                wx:for-index="cellIdx"
-                wx:key="cellIdx"
-                class="cell {{cell.course ? 'has-course' : ''}}"
-                style="{{cell.course ? 'background-color: ' + cell.course.color + ';' : ''}} {{cell.rowSpan > 1 ? 'grid-row: span ' + cell.rowSpan : ''}}"
-                data-course="{{cell.course}}"
-                bindtap="onCourseTap"
-              >
-                <view wx:if="{{cell.course}}" class="cell-content">
-                  <text class="cell-name">{{cell.course.name}}</text>
-                  <text class="cell-location">{{cell.course.location}}</text>
-                </view>
-              </view>
-            </view>
-          </block>
-        </view>
-      </view>
-    </scroll-view>
+      </scroll-view>
+    </view>
   </view>
 
   <!-- 添加按钮 -->
-  <view class="add-btn" bindtap="onAddCourse">
-    <text class="add-icon">+</text>
-  </view>
+  <view class="add-btn" bindtap="onAddCourse">+</view>
 </view>

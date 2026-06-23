@@ -1,18 +1,50 @@
 // pages/index/index.js
 const util = require('../../utils/util.js')
 
+// 固定尺寸 (rpx)
+const TIME_COL_RPX = 100
+const HEADER_H_RPX = 64
+
 Page({
   data: {
     currentWeek: 1,
     totalWeeks: 18,
+    weekOptions: [],
     showWeekend: true,
     settings: {},
     courses: [],
-    scheduleData: [], // 课程表网格数据
-    lessonNumbers: [], // 节次列表
-    showDays: 5, // 显示天数
-    dayHeaders: [] // 星期标题
+
+    totalLessons: 11,
+    lessonTimes: [],
+    dayHeaders: [],
+    dayColumns: [],
+    showDays: 7,
+
+    // 布局尺寸 (rpx)
+    timeColWidth: TIME_COL_RPX,
+    headerHeight: HEADER_H_RPX,
+    cellHeight: 100,
+    dayColWidth: 80,
+
+    // 滚动同步
+    hScrollLeft: 0,
+    gScrollLeft: 0,
+    vScrollTop: 0,
+    gScrollTop: 0,
+
+    // 自定义周次选择弹窗
+    showWeekPicker: false,
+    pickerValue: [0],
+    tempWeek: 1,
+
+    // 时间编辑弹窗
+    showTimeEdit: false,
+    editLesson: 1,
+    editStart: '08:00',
+    editEnd: '08:45'
   },
+
+  _syncing: false,
 
   onLoad() {
     this.loadSettings()
@@ -23,124 +55,223 @@ Page({
     this.loadCourses()
   },
 
-  // 加载设置
+  // 根据屏幕尺寸计算每天列宽和每节课高度，使表格刚好铺满屏幕
+  calcLayout(cb) {
+    try {
+      const info = wx.getSystemInfoSync()
+      const screenW = info.windowWidth
+      const screenH = info.windowHeight
+      const statusH = info.statusBarHeight || 0
+
+      // 自定义导航栏高度估算 = 状态栏 + 44px
+      const navHeightPx = statusH + 44
+
+      // 时间列宽
+      const timeColPx = TIME_COL_RPX * screenW / 750
+      // 表头高度
+      const headerPx = HEADER_H_RPX * screenW / 750
+
+      // 可用宽度（铺满屏幕两侧）
+      const remainWPx = screenW - timeColPx
+      const showDays = this.data.showDays || 7
+      const dayColRpx = Math.max(60, Math.floor(remainWPx * 750 / screenW / showDays))
+
+      // 可用高度 = 屏幕高 - 导航栏 - 表头（不再减去周次条/安全区，让表格充满屏幕）
+      const availableHPx = screenH - navHeightPx - headerPx
+      const totalLessons = this.data.totalLessons || 11
+      const cellHeightRpx = Math.floor(availableHPx * 750 / screenW / totalLessons)
+
+      // 最小要保证文字放得下，最大按实际可用空间
+      const finalCellH = Math.max(86, Math.min(200, cellHeightRpx))
+
+      this.setData({ dayColWidth: dayColRpx, cellHeight: finalCellH }, cb)
+    } catch (e) {
+      this.setData({ dayColWidth: 80, cellHeight: 100 }, cb)
+    }
+  },
+
   loadSettings() {
     const settings = util.getSettings()
     const currentWeek = util.getCurrentWeek(settings.startDate, settings.totalWeeks)
-    const showDays = settings.showWeekend ? 7 : 5
+    const showWeekend = settings.showWeekend !== false
+    const showDays = showWeekend ? 7 : 5
 
-    // 生成节次列表
-    const totalLessons = (settings.lessonsPerDay.morning || 4) +
-      (settings.lessonsPerDay.afternoon || 4) +
-      (settings.lessonsPerDay.evening || 3)
-    const lessonNumbers = Array.from({ length: totalLessons }, (_, i) => i + 1)
+    const morn = settings.lessonsPerDay.morning || 4
+    const afternoon = settings.lessonsPerDay.afternoon || 4
+    const evening = settings.lessonsPerDay.evening || 3
+    const totalLessons = morn + afternoon + evening
 
-    // 生成星期标题
+    // 从 settings 读取自定义时间表，并与默认时长合并
+    const lessonTimes = util.getLessonTimes(settings).slice(0, totalLessons)
     const allDays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
     const dayHeaders = allDays.slice(0, showDays)
+
+    const totalWeeks = settings.totalWeeks || 18
+    const weekOptions = Array.from({ length: totalWeeks }, (_, i) => `第 ${i + 1} 周`)
 
     this.setData({
       settings,
       currentWeek,
-      totalWeeks: settings.totalWeeks || 18,
-      showWeekend: settings.showWeekend !== false,
+      totalWeeks,
+      weekOptions,
+      showWeekend,
       showDays,
-      lessonNumbers,
+      totalLessons,
+      lessonTimes,
       dayHeaders
+    }, () => {
+      this.calcLayout(() => this.buildScheduleData())
     })
-
-    this.buildScheduleData()
   },
 
-  // 加载课程
   loadCourses() {
     const courses = util.getCourses()
     this.setData({ courses })
     this.buildScheduleData()
   },
 
-  // 构建课程表数据
   buildScheduleData() {
-    const { currentWeek, settings, courses } = this.data
-    const showDays = settings.showWeekend ? 7 : 5
-    const totalLessons = (settings.lessonsPerDay.morning || 4) +
-      (settings.lessonsPerDay.afternoon || 4) +
-      (settings.lessonsPerDay.evening || 3)
-
-    // 获取本周课程
+    const { currentWeek, courses, showDays, cellHeight } = this.data
     const weekCourses = util.getCoursesByWeek(courses, currentWeek)
 
-    // 构建网格数据
-    const scheduleData = []
+    const dayColumns = []
     for (let day = 1; day <= showDays; day++) {
       const dayCourses = weekCourses.filter(c => c.day === day)
-      const cells = []
-
-      for (let lesson = 1; lesson <= totalLessons; lesson++) {
-        // 查找该节次是否有课程
-        const course = dayCourses.find(c =>
-          lesson >= c.startLesson &&
-          lesson < c.startLesson + c.lessonCount
-        )
-
-        if (course && lesson === course.startLesson) {
-          // 课程开始节次
-          cells.push({
-            course,
-            rowSpan: course.lessonCount
-          })
-        } else if (!course) {
-          // 空单元格
-          cells.push({ course: null, rowSpan: 1 })
-        }
-        // 其他情况不添加（被 rowSpan 覆盖）
-      }
-
-      scheduleData.push({ day, cells })
+      const positioned = dayCourses.map(c => ({
+        ...c,
+        top: (c.startLesson - 1) * cellHeight,
+        height: c.lessonCount * cellHeight - 3
+      }))
+      dayColumns.push({ day, courses: positioned })
     }
 
-    this.setData({ scheduleData })
+    this.setData({ dayColumns })
   },
 
-  // 切换周次
-  onWeekChange(e) {
-    const week = parseInt(e.detail.value) + 1
-    this.setData({ currentWeek: week })
+  // ====== 滚动同步 ======
+  onGridScroll(e) {
+    if (this._syncing) return
+    this._syncing = true
+    const { scrollLeft: gl, scrollTop: gt } = e.detail
+    this.setData({ hScrollLeft: gl, vScrollTop: gt }, () => {
+      this._syncing = false
+    })
+  },
+
+  onTimeScroll(e) {
+    if (this._syncing) return
+    this._syncing = true
+    this.setData({ gScrollTop: e.detail.scrollTop }, () => {
+      this._syncing = false
+    })
+  },
+
+  onHeaderScroll(e) {
+    if (this._syncing) return
+    this._syncing = true
+    this.setData({ gScrollLeft: e.detail.scrollLeft }, () => {
+      this._syncing = false
+    })
+  },
+
+  // ====== 周次 ======
+  showWeekPicker() {
+    const pickerValue = [this.data.currentWeek - 1]
+    this.setData({
+      showWeekPicker: true,
+      pickerValue,
+      tempWeek: this.data.currentWeek
+    })
+  },
+
+  hideWeekPicker() {
+    this.setData({ showWeekPicker: false })
+  },
+
+  stopBubbling() {},
+
+  onWeekItemTap(e) {
+    const week = parseInt(e.currentTarget.dataset.week)
+    this.setData({ tempWeek: week })
+  },
+
+  confirmWeek() {
+    this.setData({
+      currentWeek: this.data.tempWeek,
+      showWeekPicker: false
+    })
     this.buildScheduleData()
   },
 
-  // 上一周
   onPrevWeek() {
-    const { currentWeek } = this.data
-    if (currentWeek > 1) {
-      this.setData({ currentWeek: currentWeek - 1 })
+    if (this.data.currentWeek > 1) {
+      this.setData({ currentWeek: this.data.currentWeek - 1 })
       this.buildScheduleData()
     }
   },
 
-  // 下一周
   onNextWeek() {
-    const { currentWeek, totalWeeks } = this.data
-    if (currentWeek < totalWeeks) {
-      this.setData({ currentWeek: currentWeek + 1 })
+    if (this.data.currentWeek < this.data.totalWeeks) {
+      this.setData({ currentWeek: this.data.currentWeek + 1 })
       this.buildScheduleData()
     }
   },
 
-  // 课程点击
+  // ====== 时间编辑 ======
+  onTimeCellTap(e) {
+    const lesson = parseInt(e.currentTarget.dataset.lesson)
+    const item = this.data.lessonTimes.find(t => t.lesson === lesson)
+    if (!item) return
+
+    this.setData({
+      showTimeEdit: true,
+      editLesson: lesson,
+      editStart: item.start,
+      editEnd: item.end
+    })
+  },
+
+  hideTimeEdit() {
+    this.setData({ showTimeEdit: false })
+  },
+
+  onStartChange(e) {
+    this.setData({ editStart: e.detail.value })
+  },
+
+  onEndChange(e) {
+    this.setData({ editEnd: e.detail.value })
+  },
+
+  confirmTimeEdit() {
+    const { editLesson, editStart, editEnd, lessonTimes, settings } = this.data
+
+    const newLessonTimes = lessonTimes.map(t => {
+      if (t.lesson === editLesson) {
+        return { ...t, start: editStart, end: editEnd }
+      }
+      return t
+    })
+
+    const newSettings = { ...settings, lessonTimes: newLessonTimes }
+    util.saveSettings(newSettings)
+
+    this.setData({
+      settings: newSettings,
+      lessonTimes: newLessonTimes,
+      showTimeEdit: false
+    })
+  },
+
+  // ====== 课程操作 ======
   onCourseTap(e) {
     const course = e.currentTarget.dataset.course
     if (course) {
-      wx.navigateTo({
-        url: `/pages/addCourse/addCourse?id=${course.id}`
-      })
+      wx.navigateTo({ url: `/pages/addCourse/addCourse?id=${course.id}` })
     }
   },
 
-  // 添加课程
   onAddCourse() {
-    wx.navigateTo({
-      url: '/pages/addCourse/addCourse'
-    })
+    wx.navigateTo({ url: '/pages/addCourse/addCourse' })
   }
 })
