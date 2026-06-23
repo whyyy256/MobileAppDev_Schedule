@@ -84,13 +84,19 @@ Page({
       const showDays = this.data.showDays || 7
       const dayColRpx = Math.max(60, Math.floor(remainWPx * 750 / screenW / showDays))
 
-      // 可用高度 = 屏幕高 - 导航栏 - 表头（不再减去周次条/安全区，让表格充满屏幕）
-      const availableHPx = screenH - navHeightPx - headerPx
       const totalLessons = this.data.totalLessons || 11
-      const cellHeightRpx = Math.floor(availableHPx * 750 / screenW / totalLessons)
+      let finalCellH
 
-      // 最小要保证文字放得下，最大按实际可用空间
-      const finalCellH = Math.max(86, Math.min(200, cellHeightRpx))
+      if (totalLessons > 10) {
+        // 节数较多时优先保证每格大小，允许表格上下滚动
+        finalCellH = 120
+      } else {
+        // 可用高度 = 屏幕高 - 导航栏 - 表头（不再减去周次条/安全区，让表格充满屏幕）
+        const availableHPx = screenH - navHeightPx - headerPx
+        const cellHeightRpx = Math.floor(availableHPx * 750 / screenW / totalLessons)
+        // 最小要保证文字放得下，最大按实际可用空间
+        finalCellH = Math.max(86, Math.min(200, cellHeightRpx))
+      }
 
       this.setData({ dayColWidth: dayColRpx, cellHeight: finalCellH }, cb)
     } catch (e) {
@@ -144,21 +150,67 @@ Page({
   },
 
   buildScheduleData() {
-    const { currentWeek, courses, showDays, cellHeight } = this.data
+    const { currentWeek, courses, showDays, cellHeight, settings, lessonTimes } = this.data
     const weekCourses = util.getCoursesByWeek(courses, currentWeek)
+
+    const lessonsPerDay = (settings && settings.lessonsPerDay) || {}
+    const morn = lessonsPerDay.morning || 0
+    const after = lessonsPerDay.afternoon || 0
+    const even = lessonsPerDay.evening || 0
+    const breakHeight = Math.max(40, Math.floor(cellHeight * 0.5))
+
+    // 计算考虑休息条带后的实际垂直位置
+    const getVisualTop = (lesson) => {
+      let offset = 0
+      if (morn > 0 && after > 0 && lesson > morn) offset += breakHeight
+      if (after > 0 && even > 0 && lesson > morn + after) offset += breakHeight
+      return (lesson - 1) * cellHeight + offset
+    }
 
     const dayColumns = []
     for (let day = 1; day <= showDays; day++) {
       const dayCourses = weekCourses.filter(c => c.day === day)
-      const positioned = dayCourses.map(c => ({
-        ...c,
-        top: (c.startLesson - 1) * cellHeight,
-        height: c.lessonCount * cellHeight - 3
-      }))
+      const positioned = dayCourses.map(c => {
+        const top = getVisualTop(c.startLesson)
+        const bottom = getVisualTop(c.startLesson + c.lessonCount)
+        return {
+          ...c,
+          top,
+          height: bottom - top - 3
+        }
+      })
       dayColumns.push({ day, courses: positioned })
     }
 
-    this.setData({ dayColumns })
+    // 午休、晚休条带（作为独立 flex 项，不覆盖表格）
+    const noonBreak = { show: false, top: 0, height: breakHeight, label: '午休' }
+    const eveningBreak = { show: false, top: 0, height: breakHeight, label: '晚休' }
+
+    if (morn > 0 && after > 0) {
+      noonBreak.show = true
+      noonBreak.top = getVisualTop(morn) + cellHeight
+    }
+    if (after > 0 && even > 0) {
+      eveningBreak.show = true
+      eveningBreak.top = getVisualTop(morn + after) + cellHeight
+    }
+
+    const morningTimes = lessonTimes.slice(0, morn)
+    const afternoonTimes = lessonTimes.slice(morn, morn + after)
+    const eveningTimes = lessonTimes.slice(morn + after, morn + after + even)
+
+    this.setData({
+      dayColumns,
+      breakHeight,
+      morningTimes,
+      afternoonTimes,
+      eveningTimes,
+      morningArray: Array.from({ length: morn }, (_, i) => i),
+      afternoonArray: Array.from({ length: after }, (_, i) => i),
+      eveningArray: Array.from({ length: even }, (_, i) => i),
+      noonBreak,
+      eveningBreak
+    })
   },
 
   // ====== 滚动同步 ======

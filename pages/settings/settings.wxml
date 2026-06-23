@@ -52,7 +52,7 @@
     <!-- 操作按钮 -->
     <view class="btn primary" bindtap="saveSettings">保存设置</view>
     <view class="btn" bindtap="showNewSemesterDialog">新建新学期</view>
-    <view class="btn" bindtap="showHistoryDialog">查看历史学期</view>
+    <view class="btn" bindtap="showHistoryDialog">切换学期</view>
 
   </view>
 </scroll-view>
