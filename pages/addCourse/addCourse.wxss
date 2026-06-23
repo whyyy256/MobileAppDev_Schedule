@@ -12,8 +12,12 @@ page {
 }
 
 .container {
-  padding: 20rpx 30rpx;
-  padding-bottom: 60rpx;
+  padding: 20rpx 30rpx !important;
+  padding-bottom: 60rpx !important;
+  height: auto !important;
+  display: block !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
 }
 
 .section {

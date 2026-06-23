@@ -40,18 +40,48 @@
       <text class="picker-confirm" bindtap="confirmTimeEdit">确定</text>
     </view>
     <view class="time-edit-body">
-      <view class="time-edit-row">
+      <view class="time-edit-row" bindtap="onEditStartTap">
         <text class="time-edit-label">上课时间</text>
-        <picker mode="time" value="{{editStart}}" bindchange="onStartChange">
-          <view class="time-edit-value">{{editStart}}</view>
-        </picker>
+        <view class="time-edit-value">{{editStart}}</view>
       </view>
-      <view class="time-edit-row">
+      <view class="time-edit-row" bindtap="onEditEndTap">
         <text class="time-edit-label">下课时间</text>
-        <picker mode="time" value="{{editEnd}}" bindchange="onEndChange">
-          <view class="time-edit-value">{{editEnd}}</view>
-        </picker>
+        <view class="time-edit-value">{{editEnd}}</view>
       </view>
+    </view>
+  </view>
+</view>
+
+<!-- 自定义时间选择弹窗 -->
+<view class="time-select-mask" wx:if="{{showTimeSelect}}" bindtap="hideTimeSelect">
+  <view class="time-select-panel" catchtap="stopBubbling">
+    <view class="time-edit-header">
+      <text class="picker-cancel" bindtap="hideTimeSelect">取消</text>
+      <text class="time-edit-title">选择时间</text>
+      <text class="picker-confirm" bindtap="confirmTimeSelect">确定</text>
+    </view>
+    <view class="time-select-body">
+      <scroll-view class="time-select-col" scroll-y enhanced show-scrollbar="{{false}}">
+        <view
+          wx:for="{{hours}}"
+          wx:key="*this"
+          class="time-select-item {{selectHour === item ? 'active' : ''}}"
+          data-value="{{item}}"
+          data-type="hour"
+          bindtap="onTimeSelectItemTap"
+        >{{item}}</view>
+      </scroll-view>
+      <text class="time-select-colon">:</text>
+      <scroll-view class="time-select-col" scroll-y enhanced show-scrollbar="{{false}}">
+        <view
+          wx:for="{{minutes}}"
+          wx:key="*this"
+          class="time-select-item {{selectMinute === item ? 'active' : ''}}"
+          data-value="{{item}}"
+          data-type="minute"
+          bindtap="onTimeSelectItemTap"
+        >{{item}}</view>
+      </scroll-view>
     </view>
   </view>
 </view>

@@ -41,7 +41,15 @@ Page({
     showTimeEdit: false,
     editLesson: 1,
     editStart: '08:00',
-    editEnd: '08:45'
+    editEnd: '08:45',
+
+    // 自定义时间选择弹窗
+    showTimeSelect: false,
+    timeSelectMode: 'start', // 'start' 或 'end'
+    selectHour: '08',
+    selectMinute: '00',
+    hours: Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')),
+    minutes: Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))
   },
 
   _syncing: false,
@@ -235,12 +243,47 @@ Page({
     this.setData({ showTimeEdit: false })
   },
 
-  onStartChange(e) {
-    this.setData({ editStart: e.detail.value })
+  onEditStartTap() {
+    const [hour, minute] = this.data.editStart.split(':')
+    this.setData({
+      showTimeSelect: true,
+      timeSelectMode: 'start',
+      selectHour: hour,
+      selectMinute: minute
+    })
   },
 
-  onEndChange(e) {
-    this.setData({ editEnd: e.detail.value })
+  onEditEndTap() {
+    const [hour, minute] = this.data.editEnd.split(':')
+    this.setData({
+      showTimeSelect: true,
+      timeSelectMode: 'end',
+      selectHour: hour,
+      selectMinute: minute
+    })
+  },
+
+  hideTimeSelect() {
+    this.setData({ showTimeSelect: false })
+  },
+
+  onTimeSelectItemTap(e) {
+    const { value, type } = e.currentTarget.dataset
+    if (type === 'hour') {
+      this.setData({ selectHour: value })
+    } else {
+      this.setData({ selectMinute: value })
+    }
+  },
+
+  confirmTimeSelect() {
+    const { timeSelectMode, selectHour, selectMinute } = this.data
+    const time = `${selectHour}:${selectMinute}`
+    if (timeSelectMode === 'start') {
+      this.setData({ editStart: time, showTimeSelect: false })
+    } else {
+      this.setData({ editEnd: time, showTimeSelect: false })
+    }
   },
 
   confirmTimeEdit() {
