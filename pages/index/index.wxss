@@ -294,11 +294,15 @@ page {
   border-right: none;
 }
 
-/* ======= 底部区域（时间列 + 网格） ======= */
+/* ======= 底部区域（单一滚动容器） ======= */
 .table-bottom {
   flex: 1;
-  display: flex;
   overflow: hidden;
+}
+
+.table-inner {
+  display: flex;
+  min-height: 100%;
 }
 
 /* 固定左侧时间列 */
@@ -306,18 +310,14 @@ page {
   flex-shrink: 0;
   border-right: 1rpx solid #e8e8e8;
   background: #fff;
+  position: sticky;
+  left: 0;
   z-index: 15;
-}
-
-.time-scroll {
-  width: 100%;
-  height: 100%;
 }
 
 .time-inner {
   display: flex;
   flex-direction: column;
-  position: relative;
 }
 
 .time-cell {
@@ -341,15 +341,9 @@ page {
   color: #aaa;
 }
 
-/* 右侧网格滚动区 */
-.grid-scroll {
-  flex: 1;
-  height: 100%;
-}
-
+/* 右侧网格 */
 .grid-area {
   display: flex;
-  position: relative;
 }
 
 .day-col {
@@ -366,45 +360,6 @@ page {
 .cell-line {
   border-bottom: 1rpx solid #f0f0f0;
   box-sizing: border-box;
-}
-
-/* ======= 午休、晚休条带 ======= */
-.time-break {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #e8e8e8;
-  border-bottom: 1rpx solid #f0f0f0;
-  box-sizing: border-box;
-}
-
-.time-break text {
-  font-size: 22rpx;
-  color: #999;
-}
-
-.break-gap {
-  flex-shrink: 0;
-  background: #e8e8e8;
-  border-bottom: 1rpx solid #f0f0f0;
-  box-sizing: border-box;
-}
-
-.break-strip-grid {
-  position: absolute;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
-}
-
-.break-strip-grid text {
-  font-size: 24rpx;
-  color: #999;
-  font-weight: 500;
 }
 
 /* ======= 课程卡片 ======= */

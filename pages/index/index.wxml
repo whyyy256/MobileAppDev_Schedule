@@ -115,55 +115,23 @@
       </scroll-view>
     </view>
 
-    <!-- 底部：固定时间列 + 双向滚动的课程网格 -->
-    <view class="table-bottom">
-      <!-- 固定左侧时间列 -->
-      <view class="time-col" style="width:{{timeColWidth}}rpx;">
-        <scroll-view
-          class="time-scroll"
-          scroll-y
-          enhanced
-          show-scrollbar="{{false}}"
-          scroll-top="{{vScrollTop}}"
-          bindscroll="onTimeScroll"
-        >
+    <!-- 底部：单一滚动区域，时间列 sticky 在左侧，与课程网格共用滚动 -->
+    <scroll-view
+      class="table-bottom"
+      scroll-x
+      scroll-y
+      enhanced
+      enable-flex
+      show-scrollbar="{{false}}"
+      scroll-left="{{gScrollLeft}}"
+      bindscroll="onGridScroll"
+    >
+      <view class="table-inner">
+        <!-- 固定左侧时间列 -->
+        <view class="time-col" style="width:{{timeColWidth}}rpx;">
           <view class="time-inner">
             <view
-              wx:for="{{morningTimes}}"
-              wx:key="lesson"
-              class="time-cell"
-              style="height:{{cellHeight}}rpx; width:{{timeColWidth}}rpx;"
-              data-lesson="{{item.lesson}}"
-              bindtap="onTimeCellTap"
-            >
-              <text class="t-num">{{item.lesson}}</text>
-              <text class="t-time">{{item.start}}</text>
-              <text class="t-time">{{item.end}}</text>
-            </view>
-
-            <view wx:if="{{noonBreak.show}}" class="time-break" style="height:{{breakHeight}}rpx;">
-              <text>午休</text>
-            </view>
-
-            <view
-              wx:for="{{afternoonTimes}}"
-              wx:key="lesson"
-              class="time-cell"
-              style="height:{{cellHeight}}rpx; width:{{timeColWidth}}rpx;"
-              data-lesson="{{item.lesson}}"
-              bindtap="onTimeCellTap"
-            >
-              <text class="t-num">{{item.lesson}}</text>
-              <text class="t-time">{{item.start}}</text>
-              <text class="t-time">{{item.end}}</text>
-            </view>
-
-            <view wx:if="{{eveningBreak.show}}" class="time-break" style="height:{{breakHeight}}rpx;">
-              <text>晚休</text>
-            </view>
-
-            <view
-              wx:for="{{eveningTimes}}"
+              wx:for="{{lessonTimes}}"
               wx:key="lesson"
               class="time-cell"
               style="height:{{cellHeight}}rpx; width:{{timeColWidth}}rpx;"
@@ -175,37 +143,10 @@
               <text class="t-time">{{item.end}}</text>
             </view>
           </view>
-        </scroll-view>
-      </view>
+        </view>
 
-      <!-- 右侧网格（双向滚动） -->
-      <scroll-view
-        class="grid-scroll"
-        scroll-x
-        scroll-y
-        enhanced
-        show-scrollbar="{{false}}"
-        scroll-left="{{gScrollLeft}}"
-        scroll-top="{{gScrollTop}}"
-        bindscroll="onGridScroll"
-      >
+        <!-- 右侧网格 -->
         <view class="grid-area">
-          <!-- 午休、晚休条带（横跨所有天，仅显示文字） -->
-          <view
-            wx:if="{{noonBreak.show}}"
-            class="break-strip-grid"
-            style="top:{{noonBreak.top}}rpx; height:{{noonBreak.height}}rpx;"
-          >
-            <text>午休</text>
-          </view>
-          <view
-            wx:if="{{eveningBreak.show}}"
-            class="break-strip-grid"
-            style="top:{{eveningBreak.top}}rpx; height:{{eveningBreak.height}}rpx;"
-          >
-            <text>晚休</text>
-          </view>
-
           <view
             class="day-col"
             wx:for="{{dayColumns}}"
@@ -214,27 +155,7 @@
           >
             <!-- 空格子辅助线 -->
             <view
-              wx:for="{{morningArray}}"
-              wx:for-index="idx"
-              wx:key="idx"
-              class="cell-line"
-              style="height:{{cellHeight}}rpx;"
-            ></view>
-
-            <view wx:if="{{noonBreak.show}}" class="break-gap" style="height:{{breakHeight}}rpx;"></view>
-
-            <view
-              wx:for="{{afternoonArray}}"
-              wx:for-index="idx"
-              wx:key="idx"
-              class="cell-line"
-              style="height:{{cellHeight}}rpx;"
-            ></view>
-
-            <view wx:if="{{eveningBreak.show}}" class="break-gap" style="height:{{breakHeight}}rpx;"></view>
-
-            <view
-              wx:for="{{eveningArray}}"
+              wx:for="{{totalLessons}}"
               wx:for-index="idx"
               wx:key="idx"
               class="cell-line"
@@ -256,8 +177,8 @@
             </view>
           </view>
         </view>
-      </scroll-view>
-    </view>
+      </view>
+    </scroll-view>
   </view>
 
   <!-- 添加按钮 -->

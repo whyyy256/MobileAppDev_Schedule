@@ -29,8 +29,6 @@ Page({
     // 滚动同步
     hScrollLeft: 0,
     gScrollLeft: 0,
-    vScrollTop: 0,
-    gScrollTop: 0,
 
     // 自定义周次选择弹窗
     showWeekPicker: false,
@@ -150,83 +148,28 @@ Page({
   },
 
   buildScheduleData() {
-    const { currentWeek, courses, showDays, cellHeight, settings, lessonTimes } = this.data
+    const { currentWeek, courses, showDays, cellHeight } = this.data
     const weekCourses = util.getCoursesByWeek(courses, currentWeek)
-
-    const lessonsPerDay = (settings && settings.lessonsPerDay) || {}
-    const morn = lessonsPerDay.morning || 0
-    const after = lessonsPerDay.afternoon || 0
-    const even = lessonsPerDay.evening || 0
-    const breakHeight = Math.max(40, Math.floor(cellHeight * 0.5))
-
-    // 计算考虑休息条带后的实际垂直位置
-    const getVisualTop = (lesson) => {
-      let offset = 0
-      if (morn > 0 && after > 0 && lesson > morn) offset += breakHeight
-      if (after > 0 && even > 0 && lesson > morn + after) offset += breakHeight
-      return (lesson - 1) * cellHeight + offset
-    }
 
     const dayColumns = []
     for (let day = 1; day <= showDays; day++) {
       const dayCourses = weekCourses.filter(c => c.day === day)
-      const positioned = dayCourses.map(c => {
-        const top = getVisualTop(c.startLesson)
-        const bottom = getVisualTop(c.startLesson + c.lessonCount)
-        return {
-          ...c,
-          top,
-          height: bottom - top - 3
-        }
-      })
+      const positioned = dayCourses.map(c => ({
+        ...c,
+        top: (c.startLesson - 1) * cellHeight,
+        height: c.lessonCount * cellHeight - 3
+      }))
       dayColumns.push({ day, courses: positioned })
     }
 
-    // 午休、晚休条带（作为独立 flex 项，不覆盖表格）
-    const noonBreak = { show: false, top: 0, height: breakHeight, label: '午休' }
-    const eveningBreak = { show: false, top: 0, height: breakHeight, label: '晚休' }
-
-    if (morn > 0 && after > 0) {
-      noonBreak.show = true
-      noonBreak.top = getVisualTop(morn) + cellHeight
-    }
-    if (after > 0 && even > 0) {
-      eveningBreak.show = true
-      eveningBreak.top = getVisualTop(morn + after) + cellHeight
-    }
-
-    const morningTimes = lessonTimes.slice(0, morn)
-    const afternoonTimes = lessonTimes.slice(morn, morn + after)
-    const eveningTimes = lessonTimes.slice(morn + after, morn + after + even)
-
-    this.setData({
-      dayColumns,
-      breakHeight,
-      morningTimes,
-      afternoonTimes,
-      eveningTimes,
-      morningArray: Array.from({ length: morn }, (_, i) => i),
-      afternoonArray: Array.from({ length: after }, (_, i) => i),
-      eveningArray: Array.from({ length: even }, (_, i) => i),
-      noonBreak,
-      eveningBreak
-    })
+    this.setData({ dayColumns })
   },
 
   // ====== 滚动同步 ======
   onGridScroll(e) {
     if (this._syncing) return
     this._syncing = true
-    const { scrollLeft: gl, scrollTop: gt } = e.detail
-    this.setData({ hScrollLeft: gl, vScrollTop: gt }, () => {
-      this._syncing = false
-    })
-  },
-
-  onTimeScroll(e) {
-    if (this._syncing) return
-    this._syncing = true
-    this.setData({ gScrollTop: e.detail.scrollTop }, () => {
+    this.setData({ hScrollLeft: e.detail.scrollLeft }, () => {
       this._syncing = false
     })
   },
