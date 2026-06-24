@@ -160,8 +160,8 @@ Page({
     } = this.data
 
     const weeks = parseInt(totalWeeks)
-    if (!Number.isInteger(weeks) || weeks <= 0) {
-      wx.showToast({ title: '总周数须为正整数', icon: 'none' })
+    if (!Number.isInteger(weeks) || weeks <= 0 || weeks > 52) {
+      wx.showToast({ title: '总周数须为 1-52 的整数', icon: 'none' })
       return
     }
 
@@ -221,8 +221,8 @@ Page({
   confirmNewSemester() {
     const { newName, newStartDate, newTotalWeeks } = this.data
     const weeks = parseInt(newTotalWeeks)
-    if (!Number.isInteger(weeks) || weeks <= 0) {
-      wx.showToast({ title: '总周数须为正整数', icon: 'none' })
+    if (!Number.isInteger(weeks) || weeks <= 0 || weeks > 52) {
+      wx.showToast({ title: '总周数须为 1-52 的整数', icon: 'none' })
       return
     }
 

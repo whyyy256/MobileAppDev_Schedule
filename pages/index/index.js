@@ -63,10 +63,6 @@ Page({
     this.loadCourses()
   },
 
-  onShow() {
-    this.loadCourses()
-  },
-
   // 根据屏幕尺寸计算每天列宽和每节课高度，使表格刚好铺满屏幕
   calcLayout(cb) {
     try {
@@ -151,9 +147,10 @@ Page({
     this.buildScheduleData()
   },
 
-  // 从设置页返回后需要重新加载
+  // 从添加课程/设置页返回后重新加载课程与设置
   onShow() {
     this.loadSettings()
+    this.loadCourses()
   },
 
   buildScheduleData() {

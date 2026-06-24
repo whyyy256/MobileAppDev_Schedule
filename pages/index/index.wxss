@@ -39,11 +39,12 @@ page {
 }
 
 .nav-week-nav {
+  width: 60rpx;
   font-size: 42rpx;
   color: #07c160;
-  padding: 0 20rpx;
   line-height: 1;
   font-weight: bold;
+  text-align: center;
 }
 
 .nav-week-nav.disabled {
@@ -51,9 +52,11 @@ page {
 }
 
 .nav-week-text {
+  width: 160rpx;
   font-size: 34rpx;
   font-weight: 700;
   color: #333;
+  text-align: center;
 }
 
 /* ======= 自定义周次选择弹窗 ======= */
