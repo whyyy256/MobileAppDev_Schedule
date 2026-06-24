@@ -420,6 +420,127 @@ function getDayName(day) {
   return names[day] || ''
 }
 
+// ====== 课程表导入解析 ======
+
+// 解析周次字符串，支持 "1,2,3"、"1-18"、"1-18(单)"、"1-18 双周" 等
+function parseWeeksString(str) {
+  if (!str) return []
+  str = String(str).trim()
+  const oddOnly = /单/.test(str)
+  const evenOnly = /双/.test(str)
+  const weeks = []
+  const parts = str.replace(/[单双周第()（）\s]/g, '').split(/[,，、;；]+/)
+  for (const p of parts) {
+    if (!p) continue
+    const m = p.match(/^(\d+)\s*[-~–]\s*(\d+)$/)
+    if (m) {
+      const a = parseInt(m[1])
+      const b = parseInt(m[2])
+      for (let i = a; i <= b; i++) weeks.push(i)
+    } else {
+      const n = parseInt(p)
+      if (!isNaN(n)) weeks.push(n)
+    }
+  }
+  if (oddOnly) return weeks.filter(w => w % 2 === 1)
+  if (evenOnly) return weeks.filter(w => w % 2 === 0)
+  return weeks
+}
+
+// 将导入的原始对象归一化为课程数据结构
+function normalizeImportedCourse(item) {
+  if (!item || typeof item !== 'object') return null
+  const name = (item.name || item.课程名称 || item.课程名 || '').toString().trim()
+  if (!name) return null
+
+  const day = parseInt(item.day || item.星期 || item.weekday || 1)
+  const startLesson = parseInt(item.startLesson || item.开始节次 || item.start || 1)
+  const lessonCount = parseInt(item.lessonCount || item.节数 || item.连续节数 || 2)
+
+  let weeks = item.weeks || item.周次 || item.week
+  if (typeof weeks === 'string') weeks = parseWeeksString(weeks)
+  if (!Array.isArray(weeks) || weeks.length === 0) weeks = [1]
+  weeks = weeks.filter(w => w >= 1 && w <= 30)
+
+  return {
+    name,
+    teacher: (item.teacher || item.教师 || '').toString().trim(),
+    location: (item.location || item.地点 || item.教室 || '').toString().trim(),
+    day: (day >= 1 && day <= 7) ? day : 1,
+    startLesson: (startLesson >= 1 && startLesson <= 20) ? startLesson : 1,
+    lessonCount: (lessonCount >= 1 && lessonCount <= 10) ? lessonCount : 2,
+    weeks,
+    color: item.color || ''
+  }
+}
+
+// 解析单行 CSV（支持引号转义）
+function parseCSVLine(line) {
+  const result = []
+  let cur = ''
+  let inQuote = false
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]
+    if (inQuote) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++ }
+        else inQuote = false
+      } else cur += ch
+    } else {
+      if (ch === '"') inQuote = true
+      else if (ch === ',') { result.push(cur); cur = '' }
+      else cur += ch
+    }
+  }
+  result.push(cur)
+  return result
+}
+
+// 解析 JSON 文本为课程数组
+function parseCoursesJSON(content) {
+  let data
+  try {
+    data = typeof content === 'string' ? JSON.parse(content) : content
+  } catch (e) {
+    return { success: false, error: 'JSON 格式错误：' + e.message }
+  }
+  if (!Array.isArray(data)) {
+    if (data && Array.isArray(data.courses)) data = data.courses
+    else return { success: false, error: 'JSON 应为课程数组或包含 courses 字段' }
+  }
+  const courses = data.map(normalizeImportedCourse).filter(Boolean)
+  if (courses.length === 0) return { success: false, error: '未解析到有效课程' }
+  return { success: true, courses }
+}
+
+// 解析 CSV 文本为课程数组
+function parseCoursesCSV(content) {
+  const lines = content.split(/\r?\n/).filter(l => l.trim())
+  if (lines.length < 2) return { success: false, error: 'CSV 内容为空' }
+  const headers = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase())
+  const courses = []
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCSVLine(lines[i])
+    const row = {}
+    headers.forEach((h, idx) => { row[h] = cols[idx] })
+    const c = normalizeImportedCourse(row)
+    if (c) courses.push(c)
+  }
+  if (courses.length === 0) return { success: false, error: '未解析到有效课程' }
+  return { success: true, courses }
+}
+
+// 根据文件扩展名解析课程数据
+function parseCoursesFromFile(filePath, content) {
+  const ext = (filePath.split('.').pop() || '').toLowerCase()
+  if (ext === 'json') return parseCoursesJSON(content)
+  if (ext === 'csv') return parseCoursesCSV(content)
+  // 兜底：尝试 JSON 再尝试 CSV
+  const jsonRes = parseCoursesJSON(content)
+  if (jsonRes.success) return jsonRes
+  return parseCoursesCSV(content)
+}
+
 module.exports = {
   DEFAULT_SETTINGS,
   COURSE_COLORS,
@@ -448,5 +569,10 @@ module.exports = {
   checkCourseConflict,
   formatWeeks,
   getWeeksList,
-  getDayName
+  getDayName,
+  parseWeeksString,
+  normalizeImportedCourse,
+  parseCoursesJSON,
+  parseCoursesCSV,
+  parseCoursesFromFile
 }

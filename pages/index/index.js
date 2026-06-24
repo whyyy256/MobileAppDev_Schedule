@@ -39,6 +39,15 @@ Page({
     // 空白格选中态（点第一下出现加号，点第二下进入添加课程）
     selectedCell: null,
 
+    // 课程详情弹窗
+    showCourseDetail: false,
+    courseDetail: null,
+
+    // 视图模式与日期视图
+    viewMode: 'week',
+    currentDay: 1,
+    dayViewCourses: [],
+
     // 自定义周次选择弹窗
     showWeekPicker: false,
     pickerValue: [0],
@@ -110,8 +119,11 @@ Page({
   loadSettings() {
     const settings = util.getSettings()
     const currentWeek = util.getCurrentWeek(settings.startDate, settings.totalWeeks)
+    const today = new Date().getDay()
+    let currentDay = today === 0 ? 7 : today
     const showWeekend = settings.showWeekend !== false
     const showDays = showWeekend ? 7 : 5
+    if (currentDay > showDays) currentDay = showDays
 
     const morn = settings.lessonsPerDay.morning || 4
     const afternoon = settings.lessonsPerDay.afternoon || 4
@@ -129,6 +141,8 @@ Page({
     this.setData({
       settings,
       currentWeek,
+      todayWeek: currentWeek,
+      currentDay,
       totalWeeks,
       weekOptions,
       showWeekend,
@@ -185,17 +199,29 @@ Page({
     let lessonStart = 1
     const sections = sectionDefs.map(def => {
       const secLessonTimes = lessonTimes.slice(lessonStart - 1, lessonStart - 1 + def.count)
+      const sectionEnd = lessonStart + def.count - 1
       const secDayColumns = []
+
       for (let day = 1; day <= showDays; day++) {
         const dayCourses = weekCourses.filter(c => c.day === day)
-        const secCourses = dayCourses.filter(c =>
-          c.startLesson >= lessonStart && c.startLesson < lessonStart + def.count
-        )
-        const positioned = secCourses.map(c => ({
-          ...c,
-          top: (c.startLesson - lessonStart) * cellHeight,
-          height: c.lessonCount * cellHeight - 3
-        }))
+        const positioned = []
+
+        for (const c of dayCourses) {
+          const courseEnd = c.startLesson + c.lessonCount - 1
+          // 当前节段与课程的交集
+          const clipStart = Math.max(c.startLesson, lessonStart)
+          const clipEnd = Math.min(courseEnd, sectionEnd)
+          if (clipStart > clipEnd) continue
+
+          positioned.push({
+            ...c,
+            top: (clipStart - lessonStart) * cellHeight,
+            height: (clipEnd - clipStart + 1) * cellHeight - 3,
+            _originalStartLesson: c.startLesson,
+            _originalLessonCount: c.lessonCount
+          })
+        }
+
         secDayColumns.push({ day, courses: positioned })
       }
 
@@ -211,6 +237,22 @@ Page({
     })
 
     this.setData({ dayColumns, sections })
+    this.buildDayView()
+  },
+
+  buildDayView() {
+    const { currentWeek, currentDay, courses, lessonTimes } = this.data
+    const dayCourses = courses.filter(c =>
+      c.day === currentDay && c.weeks && c.weeks.includes(currentWeek)
+    ).sort((a, b) => a.startLesson - b.startLesson).map(c => {
+      const startTime = lessonTimes[c.startLesson - 1]
+      const endTime = lessonTimes[c.startLesson + c.lessonCount - 2]
+      return {
+        ...c,
+        timeText: startTime && endTime ? `${startTime.start}-${endTime.end}` : ''
+      }
+    })
+    this.setData({ dayViewCourses: dayCourses })
   },
 
   // ====== 滚动同步 ======
@@ -228,6 +270,27 @@ Page({
     this.setData({ gScrollLeft: e.detail.scrollLeft }, () => {
       this._syncing = false
     })
+  },
+
+  // ====== 左右滑动切换周次 ======
+  onTableTouchStart(e) {
+    this._touchStartX = e.touches[0].clientX
+    this._touchStartY = e.touches[0].clientY
+  },
+
+  onTableTouchEnd(e) {
+    if (!this._touchStartX || !this._touchStartY) return
+    const endX = e.changedTouches[0].clientX
+    const endY = e.changedTouches[0].clientY
+    const dx = endX - this._touchStartX
+    const dy = endY - this._touchStartY
+    this._touchStartX = 0
+    this._touchStartY = 0
+
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 80) {
+      if (dx < 0) this.onNextWeek()
+      else this.onPrevWeek()
+    }
   },
 
   // ====== 周次 ======
@@ -271,6 +334,26 @@ Page({
     if (this.data.currentWeek < this.data.totalWeeks) {
       this.setData({ currentWeek: this.data.currentWeek + 1, selectedCell: null })
       this.buildScheduleData()
+    }
+  },
+
+  onToggleView() {
+    const viewMode = this.data.viewMode === 'week' ? 'day' : 'week'
+    this.setData({ viewMode })
+    if (viewMode === 'day') this.buildDayView()
+  },
+
+  onPrevDay() {
+    if (this.data.currentDay > 1) {
+      this.setData({ currentDay: this.data.currentDay - 1 })
+      this.buildDayView()
+    }
+  },
+
+  onNextDay() {
+    if (this.data.currentDay < this.data.showDays) {
+      this.setData({ currentDay: this.data.currentDay + 1 })
+      this.buildDayView()
     }
   },
 
@@ -359,6 +442,24 @@ Page({
   onCourseTap(e) {
     const course = e.currentTarget.dataset.course
     if (course) {
+      this.setData({
+        showCourseDetail: true,
+        courseDetail: {
+          ...course,
+          weeksText: util.formatWeeks(course.weeks)
+        }
+      })
+    }
+  },
+
+  hideCourseDetail() {
+    this.setData({ showCourseDetail: false, courseDetail: null })
+  },
+
+  onEditCourseDetail() {
+    const course = this.data.courseDetail
+    this.setData({ showCourseDetail: false })
+    if (course) {
       wx.navigateTo({ url: `/pages/addCourse/addCourse?id=${course.id}` })
     }
   },
@@ -383,5 +484,15 @@ Page({
 
   onAddCourse() {
     wx.navigateTo({ url: '/pages/addCourse/addCourse' })
+  },
+
+  onImportTap() {
+    wx.showActionSheet({
+      itemList: ['从文件导入（Excel/CSV/JSON）', '从图片导入（OCR 识别）'],
+      success: (res) => {
+        const mode = res.tapIndex === 1 ? 'image' : 'file'
+        wx.navigateTo({ url: `/pages/import/import?mode=${mode}` })
+      }
+    })
   }
 })

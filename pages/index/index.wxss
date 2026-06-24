@@ -59,6 +59,31 @@ page {
   text-align: center;
 }
 
+.nav-week-current {
+  color: #07c160;
+}
+
+.nav-right {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10rpx;
+}
+
+.nav-toggle {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 50%;
+  font-size: 26rpx;
+  color: #333;
+  font-weight: bold;
+}
+
 /* ======= 自定义周次选择弹窗 ======= */
 .week-picker-mask {
   position: fixed;
@@ -459,4 +484,227 @@ page {
   font-weight: bold;
   box-shadow: 0 8rpx 24rpx rgba(7,193,96,0.4);
   z-index: 100;
+}
+
+/* ======= 导入按钮（左下角白色圆形） ======= */
+.import-btn {
+  position: fixed;
+  left: 40rpx;
+  bottom: 60rpx;
+  width: 100rpx;
+  height: 100rpx;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.18);
+  z-index: 100;
+}
+
+.import-icon {
+  position: relative;
+  width: 44rpx;
+  height: 44rpx;
+}
+
+.import-arrow {
+  position: absolute;
+  top: 0;
+  left: 18rpx;
+  width: 8rpx;
+  height: 24rpx;
+  background: #07c160;
+  border-radius: 2rpx;
+}
+
+.import-arrow::after {
+  content: '';
+  position: absolute;
+  bottom: -4rpx;
+  left: -9rpx;
+  width: 18rpx;
+  height: 18rpx;
+  border-right: 8rpx solid #07c160;
+  border-bottom: 8rpx solid #07c160;
+  transform: rotate(45deg);
+}
+
+.import-tray {
+  position: absolute;
+  bottom: 0;
+  left: 2rpx;
+  width: 40rpx;
+  height: 8rpx;
+  background: #07c160;
+  border-radius: 4rpx;
+}
+
+/* ======= 课程详情弹窗 ======= */
+.course-detail-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx;
+}
+
+.course-detail-panel {
+  width: 100%;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 40rpx;
+  border-left: 12rpx solid #07c160;
+  box-sizing: border-box;
+}
+
+.course-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30rpx;
+}
+
+.course-detail-name {
+  font-size: 38rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.course-detail-close {
+  font-size: 48rpx;
+  color: #999;
+  line-height: 1;
+  padding: 0 10rpx;
+}
+
+.course-detail-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.course-detail-label {
+  width: 100rpx;
+  font-size: 28rpx;
+  color: #999;
+  flex-shrink: 0;
+}
+
+.course-detail-value {
+  flex: 1;
+  font-size: 30rpx;
+  color: #333;
+  word-break: break-all;
+}
+
+.course-detail-actions {
+  margin-top: 40rpx;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.course-detail-btn {
+  padding: 16rpx 40rpx;
+  border-radius: 10rpx;
+  font-size: 30rpx;
+}
+
+.course-detail-btn.edit {
+  background: #07c160;
+  color: #fff;
+}
+
+/* ======= 日视图 ======= */
+.day-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 16rpx;
+  margin: 0 20rpx 20rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.day-view-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.day-view-nav {
+  font-size: 40rpx;
+  color: #07c160;
+  padding: 0 40rpx;
+  font-weight: bold;
+}
+
+.day-view-nav.disabled {
+  color: #ddd;
+}
+
+.day-view-title {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #333;
+  min-width: 120rpx;
+  text-align: center;
+}
+
+.day-view-list {
+  flex: 1;
+  padding: 20rpx;
+}
+
+.day-view-empty {
+  text-align: center;
+  padding: 80rpx 0;
+  font-size: 30rpx;
+  color: #999;
+}
+
+.day-view-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  background: #fafafa;
+  border-radius: 12rpx;
+  border-left: 8rpx solid #07c160;
+}
+
+.day-view-time {
+  width: 160rpx;
+  font-size: 26rpx;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.day-view-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: 20rpx;
+}
+
+.day-view-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.day-view-meta {
+  font-size: 26rpx;
+  color: #999;
 }

@@ -1,0 +1,158 @@
+<!--pages/import/import.wxml-->
+<wxs module="weekUtil">
+  module.exports = {
+    isSelected: function(weeks, week) {
+      return weeks.indexOf(week) > -1
+    }
+  }
+</wxs>
+
+<navigation-bar title="导入课程表" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="container">
+    <!-- 图片导入：展示选中的图片作为参考 -->
+    <view class="image-ref" wx:if="{{mode === 'image' && imagePath}}">
+      <image class="ref-img" src="{{imagePath}}" mode="widthFix" bindtap="onPreviewImageTap" />
+      <view class="ref-tip">点击图片可放大查看，请对照图片核对/添加下方课程</view>
+    </view>
+
+    <!-- 导入来源说明 -->
+    <view class="source-tip">
+      <text wx:if="{{mode === 'file'}}">来源：文件导入（JSON / CSV）</text>
+      <text wx:else>来源：图片导入</text>
+    </view>
+
+    <!-- 预览课程列表 -->
+    <view class="section">
+      <view class="section-title">
+        <text>预览课程（{{previewCourses.length}}）</text>
+      </view>
+
+      <view wx:if="{{previewCourses.length === 0}}" class="empty-tip">
+        暂无课程，点击下方"添加课程"手动添加
+      </view>
+
+      <view class="course-list">
+        <view
+          wx:for="{{previewCourses}}"
+          wx:key="index"
+          class="course-item"
+          style="border-left-color: {{item.color}};"
+        >
+          <view class="course-info">
+            <view class="course-name">{{item.name}}</view>
+            <view class="course-meta">
+              {{dayOptions[item.day - 1]}} · 第{{item.startLesson}}-{{item.startLesson + item.lessonCount - 1}}节
+              <text wx:if="{{item.location}}"> · @{{item.location}}</text>
+            </view>
+            <view class="course-meta" wx:if="{{item.teacher}}">教师：{{item.teacher}}</view>
+            <view class="course-weeks">周次：{{item.weeks.length}}周</view>
+          </view>
+          <view class="course-ops">
+            <text class="op-edit" data-index="{{index}}" bindtap="onEditCourse">编辑</text>
+            <text class="op-del" data-index="{{index}}" bindtap="onDeleteCourse">删除</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="actions">
+      <button class="btn-add" bindtap="onAddCourse">+ 添加课程</button>
+      <button class="btn-import" bindtap="onConfirmImport">确认导入（{{previewCourses.length}}门）</button>
+    </view>
+  </view>
+</scroll-view>
+
+<!-- 编辑/新增课程弹窗 -->
+<view class="edit-mask" wx:if="{{showEdit}}" bindtap="hideEdit">
+  <view class="edit-panel" catchtap="stopBubbling">
+    <view class="edit-header">
+      <text class="picker-cancel" bindtap="hideEdit">取消</text>
+      <text class="edit-title">{{editIndex === -1 ? '添加课程' : '编辑课程'}}</text>
+      <text class="picker-confirm" bindtap="onConfirmEdit">保存</text>
+    </view>
+
+    <scroll-view class="edit-body" scroll-y>
+      <view class="form-item">
+        <text class="label">课程名称</text>
+        <input class="input" placeholder="请输入课程名称" value="{{courseName}}" bindinput="onCourseNameInput" />
+      </view>
+      <view class="form-item">
+        <text class="label">授课教师</text>
+        <input class="input" placeholder="选填" value="{{teacher}}" bindinput="onTeacherInput" />
+      </view>
+      <view class="form-item">
+        <text class="label">上课地点</text>
+        <input class="input" placeholder="选填" value="{{location}}" bindinput="onLocationInput" />
+      </view>
+      <view class="form-item">
+        <text class="label">星期</text>
+        <view class="picker" bindtap="showDayPicker">{{dayOptions[day - 1]}}</view>
+      </view>
+      <view class="form-item">
+        <text class="label">开始节次</text>
+        <view class="picker" bindtap="showStartLessonPicker">第 {{startLesson}} 节</view>
+      </view>
+      <view class="form-item">
+        <text class="label">连续节数</text>
+        <view class="picker" bindtap="showLessonCountPicker">{{lessonCount}} 节</view>
+      </view>
+
+      <view class="form-block">
+        <view class="block-title">
+          <text>上课周次</text>
+          <view class="week-actions">
+            <text class="action-btn" bindtap="onSelectAllWeeks">全选</text>
+            <text class="action-btn" bindtap="onOddWeeks">单周</text>
+            <text class="action-btn" bindtap="onEvenWeeks">双周</text>
+            <text class="action-btn" bindtap="onClearWeeks">清空</text>
+          </view>
+        </view>
+        <view class="week-grid">
+          <view
+            wx:for="{{weekOptions}}"
+            wx:key="*this"
+            class="week-item {{weekUtil.isSelected(weeks, item) ? 'selected' : ''}}"
+            data-week="{{item}}"
+            bindtap="onWeekToggle"
+          >{{item}}</view>
+        </view>
+      </view>
+
+      <view class="form-block">
+        <view class="block-title"><text>课程颜色</text></view>
+        <view class="color-grid">
+          <view
+            wx:for="{{colorOptions}}"
+            wx:key="*this"
+            class="color-item {{color === item ? 'selected' : ''}}"
+            style="background-color: {{item}}"
+            data-color="{{item}}"
+            bindtap="onColorSelect"
+          ></view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</view>
+
+<!-- picker 弹窗 -->
+<view class="picker-mask" wx:if="{{showPicker}}" bindtap="hidePicker">
+  <view class="picker-panel" catchtap="stopBubbling">
+    <view class="picker-header">
+      <text class="picker-cancel" bindtap="hidePicker">取消</text>
+      <text class="picker-title">{{pickerTitle}}</text>
+      <text class="picker-confirm" bindtap="confirmPicker">确定</text>
+    </view>
+    <scroll-view class="picker-body" scroll-y>
+      <view
+        wx:for="{{pickerOptions}}"
+        wx:key="value"
+        class="picker-item {{pickerValue === item.value ? 'selected' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="onPickerItemTap"
+      >{{item.label}}</view>
+    </scroll-view>
+  </view>
+</view>

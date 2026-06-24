@@ -10,8 +10,11 @@
   </view>
   <view slot="center" class="nav-center">
     <text class="nav-week-nav {{currentWeek <= 1 ? 'disabled' : ''}}" bindtap="onPrevWeek">‹</text>
-    <view class="nav-week-text" bindtap="showWeekPicker">第 {{currentWeek}} 周</view>
+    <view class="nav-week-text {{currentWeek === todayWeek ? 'nav-week-current' : ''}}" bindtap="showWeekPicker">第 {{currentWeek}} 周</view>
     <text class="nav-week-nav {{currentWeek >= totalWeeks ? 'disabled' : ''}}" bindtap="onNextWeek">›</text>
+  </view>
+  <view slot="right" class="nav-right" bindtap="onToggleView">
+    <text class="nav-toggle">{{viewMode === 'week' ? '日' : '周'}}</text>
   </view>
 </navigation-bar>
 
@@ -89,9 +92,40 @@
   </view>
 </view>
 
+<!-- 课程详情弹窗 -->
+<view class="course-detail-mask" wx:if="{{showCourseDetail}}" bindtap="hideCourseDetail">
+  <view class="course-detail-panel" catchtap="stopBubbling" style="border-left-color: {{courseDetail.color}};">
+    <view class="course-detail-header">
+      <text class="course-detail-name">{{courseDetail.name}}</text>
+      <text class="course-detail-close" bindtap="hideCourseDetail">×</text>
+    </view>
+    <view class="course-detail-body">
+      <view class="course-detail-row" wx:if="{{courseDetail.teacher}}">
+        <text class="course-detail-label">教师</text>
+        <text class="course-detail-value">{{courseDetail.teacher}}</text>
+      </view>
+      <view class="course-detail-row" wx:if="{{courseDetail.location}}">
+        <text class="course-detail-label">地点</text>
+        <text class="course-detail-value">{{courseDetail.location}}</text>
+      </view>
+      <view class="course-detail-row">
+        <text class="course-detail-label">时间</text>
+        <text class="course-detail-value">{{dayHeaders[courseDetail.day - 1]}} 第 {{courseDetail.startLesson}}-{{courseDetail.startLesson + courseDetail.lessonCount - 1}} 节</text>
+      </view>
+      <view class="course-detail-row">
+        <text class="course-detail-label">周次</text>
+        <text class="course-detail-value">{{courseDetail.weeksText}}</text>
+      </view>
+    </view>
+    <view class="course-detail-actions">
+      <view class="course-detail-btn edit" bindtap="onEditCourseDetail">编辑课程</view>
+    </view>
+  </view>
+</view>
+
 <view class="container">
   <!-- 课程表 -->
-  <view class="schedule-wrap">
+  <view class="schedule-wrap" wx:if="{{viewMode === 'week'}}">
 
     <!-- 顶部：固定角落 + 横向滚动的星期标题 -->
     <view class="table-top">
@@ -125,6 +159,8 @@
       show-scrollbar="{{false}}"
       scroll-left="{{gScrollLeft}}"
       bindscroll="onGridScroll"
+      bindtouchstart="onTableTouchStart"
+      bindtouchend="onTableTouchEnd"
     >
       <view class="table-inner">
         <block wx:for="{{sections}}" wx:key="key" wx:for-item="sec">
@@ -201,6 +237,42 @@
     </scroll-view>
   </view>
 
+  <!-- 日视图 -->
+  <view class="day-view" wx:if="{{viewMode === 'day'}}">
+    <view class="day-view-header">
+      <text class="day-view-nav {{currentDay <= 1 ? 'disabled' : ''}}" bindtap="onPrevDay">‹</text>
+      <text class="day-view-title">{{dayHeaders[currentDay - 1]}}</text>
+      <text class="day-view-nav {{currentDay >= showDays ? 'disabled' : ''}}" bindtap="onNextDay">›</text>
+    </view>
+    <scroll-view class="day-view-list" scroll-y enhanced show-scrollbar="{{false}}">
+      <view wx:if="{{dayViewCourses.length === 0}}" class="day-view-empty">今日无课</view>
+      <view
+        wx:for="{{dayViewCourses}}"
+        wx:key="id"
+        class="day-view-item"
+        style="border-left-color: {{item.color}};"
+        data-course="{{item}}"
+        bindtap="onCourseTap"
+      >
+        <text class="day-view-time">{{item.timeText}}</text>
+        <view class="day-view-info">
+          <text class="day-view-name">{{item.name}}</text>
+          <text class="day-view-meta" wx:if="{{item.teacher || item.location}}">
+            {{item.teacher}}{{item.teacher && item.location ? ' · ' : ''}}{{item.location ? '@' + item.location : ''}}
+          </text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
   <!-- 添加按钮 -->
   <view class="add-btn" bindtap="onAddCourse">+</view>
+
+  <!-- 导入按钮 -->
+  <view class="import-btn" bindtap="onImportTap">
+    <view class="import-icon">
+      <view class="import-arrow"></view>
+      <view class="import-tray"></view>
+    </view>
+  </view>
 </view>
