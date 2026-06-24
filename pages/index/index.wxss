@@ -26,9 +26,8 @@ page {
 }
 
 .nav-settings-icon {
-  font-size: 40rpx;
-  color: #333;
-  line-height: 1;
+  width: 44rpx;
+  height: 44rpx;
 }
 
 /* ======= 导航栏中间周次切换 ======= */

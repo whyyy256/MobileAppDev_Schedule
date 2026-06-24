@@ -6,7 +6,7 @@
   background="#FFF"
 >
   <view slot="left" class="nav-left" bindtap="onSettingsTap">
-    <text class="nav-settings-icon">⚙</text>
+    <image class="nav-settings-icon" src="/assets/icons/settings.svg" mode="aspectFit" />
   </view>
   <view slot="center" class="nav-center">
     <text class="nav-week-nav {{currentWeek <= 1 ? 'disabled' : ''}}" bindtap="onPrevWeek">‹</text>
