@@ -115,7 +115,7 @@
       </scroll-view>
     </view>
 
-    <!-- 底部：单一滚动区域，时间列 sticky 在左侧，与课程网格共用滚动 -->
+    <!-- 底部：单一滚动区域，按上午/下午/晚上分节，节间插入午休/晚休条带 -->
     <scroll-view
       class="table-bottom"
       scroll-x
@@ -127,56 +127,69 @@
       bindscroll="onGridScroll"
     >
       <view class="table-inner">
-        <!-- 固定左侧时间列 -->
-        <view class="time-col" style="width:{{timeColWidth}}rpx;">
-          <view class="time-inner">
-            <view
-              wx:for="{{lessonTimes}}"
-              wx:key="lesson"
-              class="time-cell"
-              style="height:{{cellHeight}}rpx; width:{{timeColWidth}}rpx;"
-              data-lesson="{{item.lesson}}"
-              bindtap="onTimeCellTap"
-            >
-              <text class="t-num">{{item.lesson}}</text>
-              <text class="t-time">{{item.start}}</text>
-              <text class="t-time">{{item.end}}</text>
+        <block wx:for="{{sections}}" wx:key="key" wx:for-item="sec">
+          <view class="table-section">
+            <!-- 固定左侧时间列 -->
+            <view class="time-col" style="width:{{timeColWidth}}rpx;">
+              <view class="time-inner">
+                <view
+                  wx:for="{{sec.lessonTimes}}"
+                  wx:key="lesson"
+                  class="time-cell"
+                  style="height:{{cellHeight}}rpx; width:{{timeColWidth}}rpx;"
+                  data-lesson="{{item.lesson}}"
+                  bindtap="onTimeCellTap"
+                >
+                  <text class="t-num">{{item.lesson}}</text>
+                  <text class="t-time">{{item.start}}</text>
+                  <text class="t-time">{{item.end}}</text>
+                </view>
+              </view>
+            </view>
+
+            <!-- 右侧网格 -->
+            <view class="grid-area">
+              <view
+                class="day-col"
+                wx:for="{{sec.dayColumns}}"
+                wx:key="day"
+                style="width:{{dayColWidth}}rpx;"
+              >
+                <!-- 空格子辅助线 -->
+                <view
+                  wx:for="{{sec.lessonTimes}}"
+                  wx:for-index="idx"
+                  wx:key="idx"
+                  class="cell-line"
+                  style="height:{{cellHeight}}rpx;"
+                ></view>
+
+                <!-- 课程卡片 -->
+                <view
+                  wx:for="{{item.courses}}"
+                  wx:for-item="c"
+                  wx:key="id"
+                  class="course-card"
+                  style="top:{{c.top}}rpx; height:{{c.height}}rpx; background:{{c.color}};"
+                  data-course="{{c}}"
+                  catchtap="onCourseTap"
+                >
+                  <text class="c-name">{{c.name}}</text>
+                  <text class="c-loc" wx:if="{{c.location}}">@{{c.location}}</text>
+                </view>
+              </view>
             </view>
           </view>
-        </view>
 
-        <!-- 右侧网格 -->
-        <view class="grid-area">
+          <!-- 午休 / 晚休条带 -->
           <view
-            class="day-col"
-            wx:for="{{dayColumns}}"
-            wx:key="day"
-            style="width:{{dayColWidth}}rpx;"
+            wx:if="{{sec.breakName}}"
+            class="break-band"
+            style="height:{{cellHeight / 3}}rpx;"
           >
-            <!-- 空格子辅助线 -->
-            <view
-              wx:for="{{totalLessons}}"
-              wx:for-index="idx"
-              wx:key="idx"
-              class="cell-line"
-              style="height:{{cellHeight}}rpx;"
-            ></view>
-
-            <!-- 课程卡片 -->
-            <view
-              wx:for="{{item.courses}}"
-              wx:for-item="c"
-              wx:key="id"
-              class="course-card"
-              style="top:{{c.top}}rpx; height:{{c.height}}rpx; background:{{c.color}};"
-              data-course="{{c}}"
-              catchtap="onCourseTap"
-            >
-              <text class="c-name">{{c.name}}</text>
-              <text class="c-loc" wx:if="{{c.location}}">@{{c.location}}</text>
-            </view>
+            <text>{{sec.breakName}}</text>
           </view>
-        </view>
+        </block>
       </view>
     </scroll-view>
   </view>

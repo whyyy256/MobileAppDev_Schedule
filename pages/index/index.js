@@ -18,7 +18,13 @@ Page({
     lessonTimes: [],
     dayHeaders: [],
     dayColumns: [],
+    sections: [],
     showDays: 7,
+
+    // 各时段节数
+    morn: 4,
+    afternoon: 4,
+    evening: 3,
 
     // 布局尺寸 (rpx)
     timeColWidth: TIME_COL_RPX,
@@ -130,7 +136,10 @@ Page({
       showDays,
       totalLessons,
       lessonTimes,
-      dayHeaders
+      dayHeaders,
+      morn,
+      afternoon,
+      evening
     }, () => {
       this.calcLayout(() => this.buildScheduleData())
     })
@@ -148,7 +157,7 @@ Page({
   },
 
   buildScheduleData() {
-    const { currentWeek, courses, showDays, cellHeight } = this.data
+    const { currentWeek, courses, showDays, cellHeight, lessonTimes, morn, afternoon, evening } = this.data
     const weekCourses = util.getCoursesByWeek(courses, currentWeek)
 
     const dayColumns = []
@@ -162,7 +171,42 @@ Page({
       dayColumns.push({ day, courses: positioned })
     }
 
-    this.setData({ dayColumns })
+    // 分节：上午 / 下午 / 晚上，并在节间插入午休、晚休条带
+    const sectionDefs = [
+      { key: 'morning', count: morn, breakName: afternoon > 0 ? '午休' : null },
+      { key: 'afternoon', count: afternoon, breakName: evening > 0 ? '晚休' : null },
+      { key: 'evening', count: evening, breakName: null }
+    ].filter(s => s.count > 0)
+
+    let lessonStart = 1
+    const sections = sectionDefs.map(def => {
+      const secLessonTimes = lessonTimes.slice(lessonStart - 1, lessonStart - 1 + def.count)
+      const secDayColumns = []
+      for (let day = 1; day <= showDays; day++) {
+        const dayCourses = weekCourses.filter(c => c.day === day)
+        const secCourses = dayCourses.filter(c =>
+          c.startLesson >= lessonStart && c.startLesson < lessonStart + def.count
+        )
+        const positioned = secCourses.map(c => ({
+          ...c,
+          top: (c.startLesson - lessonStart) * cellHeight,
+          height: c.lessonCount * cellHeight - 3
+        }))
+        secDayColumns.push({ day, courses: positioned })
+      }
+
+      const section = {
+        key: def.key,
+        breakName: def.breakName,
+        lessonTimes: secLessonTimes,
+        dayColumns: secDayColumns
+      }
+
+      lessonStart += def.count
+      return section
+    })
+
+    this.setData({ dayColumns, sections })
   },
 
   // ====== 滚动同步 ======

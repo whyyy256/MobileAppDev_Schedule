@@ -302,7 +302,12 @@ page {
 
 .table-inner {
   display: flex;
+  flex-direction: column;
   min-height: 100%;
+}
+
+.table-section {
+  display: flex;
 }
 
 /* 固定左侧时间列 */
@@ -344,6 +349,22 @@ page {
 /* 右侧网格 */
 .grid-area {
   display: flex;
+}
+
+/* 午休 / 晚休条带 */
+.break-band {
+  width: 100%;
+  flex-shrink: 0;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.break-band text {
+  font-size: 22rpx;
+  color: #999;
 }
 
 .day-col {
