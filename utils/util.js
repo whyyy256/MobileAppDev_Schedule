@@ -365,6 +365,25 @@ function getCourseById(courseId) {
   return courses.find(c => c.id === courseId)
 }
 
+// 检测课程时间冲突，返回第一个冲突的课程，无冲突返回 null
+function checkCourseConflict(courseData, excludeId) {
+  const courses = getCourses()
+  for (const c of courses) {
+    if (excludeId && c.id === excludeId) continue
+    if (c.day !== courseData.day) continue
+
+    const cEnd = c.startLesson + c.lessonCount
+    const newEnd = courseData.startLesson + courseData.lessonCount
+    if (courseData.startLesson >= cEnd || newEnd <= c.startLesson) continue
+
+    const hasWeekOverlap = (courseData.weeks || []).some(w => c.weeks && c.weeks.includes(w))
+    if (!hasWeekOverlap) continue
+
+    return c
+  }
+  return null
+}
+
 // 格式化周次显示
 function formatWeeks(weeks) {
   if (!weeks || weeks.length === 0) return ''
@@ -426,6 +445,7 @@ module.exports = {
   updateCourse,
   deleteCourse,
   getCourseById,
+  checkCourseConflict,
   formatWeeks,
   getWeeksList,
   getDayName

@@ -95,7 +95,7 @@
 
     <!-- 顶部：固定角落 + 横向滚动的星期标题 -->
     <view class="table-top">
-      <view class="corner-cell" style="width:{{timeColWidth}}rpx; height:{{headerHeight}}rpx;">节</view>
+      <view class="corner-cell" style="width:{{timeColWidth}}rpx; height:{{headerHeight}}rpx;"></view>
       <scroll-view
         class="header-scroll"
         scroll-x

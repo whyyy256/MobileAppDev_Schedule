@@ -37,29 +37,23 @@
 
       <view class="form-item">
         <text class="label">星期</text>
-        <picker mode="selector" range="{{dayOptions}}" value="{{day - 1}}" bindchange="onDayChange">
-          <view class="picker">
-            {{dayOptions[day - 1]}}
-          </view>
-        </picker>
+        <view class="picker" bindtap="showDayPicker">
+          {{dayOptions[day - 1]}}
+        </view>
       </view>
 
       <view class="form-item">
         <text class="label">开始节次</text>
-        <picker mode="selector" range="{{lessonOptions}}" value="{{startLesson - 1}}" bindchange="onStartLessonChange">
-          <view class="picker">
-            第 {{startLesson}} 节
-          </view>
-        </picker>
+        <view class="picker" bindtap="showStartLessonPicker">
+          第 {{startLesson}} 节
+        </view>
       </view>
 
       <view class="form-item">
         <text class="label">连续节数</text>
-        <picker mode="selector" range="{{lessonOptions}}" value="{{lessonCount - 1}}" bindchange="onLessonCountChange">
-          <view class="picker">
-            {{lessonCount}} 节
-          </view>
-        </picker>
+        <view class="picker" bindtap="showLessonCountPicker">
+          {{lessonCount}} 节
+        </view>
       </view>
     </view>
 
@@ -114,3 +108,23 @@
     </view>
   </view>
 </scroll-view>
+
+<!-- 自定义 picker 弹窗 -->
+<view class="picker-mask" wx:if="{{showPicker}}" bindtap="hidePicker">
+  <view class="picker-panel" catchtap="stopBubbling">
+    <view class="picker-header">
+      <text class="picker-cancel" bindtap="hidePicker">取消</text>
+      <text class="picker-title">{{pickerTitle}}</text>
+      <text class="picker-confirm" bindtap="confirmPicker">确定</text>
+    </view>
+    <scroll-view class="picker-body" scroll-y>
+      <view
+        wx:for="{{pickerOptions}}"
+        wx:key="value"
+        class="picker-item {{pickerValue === item.value ? 'selected' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="onPickerItemTap"
+      >{{item.label}}</view>
+    </scroll-view>
+  </view>
+</view>

@@ -25,7 +25,14 @@ Page({
 
     // 设置
     settings: {},
-    maxLessons: 12
+    maxLessons: 12,
+
+    // 自定义 picker 弹窗
+    showPicker: false,
+    pickerMode: '',
+    pickerTitle: '',
+    pickerOptions: [],
+    pickerValue: 1
   },
 
   onLoad(options) {
@@ -87,20 +94,58 @@ Page({
     this.setData({ location: e.detail.value })
   },
 
-  // 星期几
-  onDayChange(e) {
-    this.setData({ day: parseInt(e.detail.value) + 1 })
+  // 自定义 picker：选择星期
+  showDayPicker() {
+    const options = this.data.dayOptions.map((label, index) => ({ label, value: index + 1 }))
+    this.setData({
+      showPicker: true,
+      pickerMode: 'day',
+      pickerTitle: '选择星期',
+      pickerOptions: options,
+      pickerValue: this.data.day
+    })
   },
 
-  // 开始节次
-  onStartLessonChange(e) {
-    this.setData({ startLesson: parseInt(e.detail.value) + 1 })
+  // 自定义 picker：选择开始节次
+  showStartLessonPicker() {
+    const options = this.data.lessonOptions.map(v => ({ label: `第 ${v} 节`, value: v }))
+    this.setData({
+      showPicker: true,
+      pickerMode: 'startLesson',
+      pickerTitle: '选择开始节次',
+      pickerOptions: options,
+      pickerValue: this.data.startLesson
+    })
   },
 
-  // 连续节数
-  onLessonCountChange(e) {
-    this.setData({ lessonCount: parseInt(e.detail.value) + 1 })
+  // 自定义 picker：选择连续节数
+  showLessonCountPicker() {
+    const options = this.data.lessonOptions.map(v => ({ label: `${v} 节`, value: v }))
+    this.setData({
+      showPicker: true,
+      pickerMode: 'lessonCount',
+      pickerTitle: '选择连续节数',
+      pickerOptions: options,
+      pickerValue: this.data.lessonCount
+    })
   },
+
+  hidePicker() {
+    this.setData({ showPicker: false })
+  },
+
+  onPickerItemTap(e) {
+    this.setData({ pickerValue: parseInt(e.currentTarget.dataset.value) })
+  },
+
+  confirmPicker() {
+    const { pickerMode, pickerValue } = this.data
+    const data = { showPicker: false }
+    data[pickerMode] = pickerValue
+    this.setData(data)
+  },
+
+  stopBubbling() {},
 
   // 选择周次
   onWeekToggle(e) {
@@ -174,6 +219,16 @@ Page({
       lessonCount,
       weeks,
       color
+    }
+
+    const conflict = util.checkCourseConflict(courseData, isEdit ? courseId : '')
+    if (conflict) {
+      wx.showModal({
+        title: '时间冲突',
+        content: `与《${conflict.name}》时间冲突，请调整后再保存。`,
+        showCancel: false
+      })
+      return
     }
 
     if (isEdit) {
