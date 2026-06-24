@@ -169,8 +169,8 @@
                   wx:for="{{item.courses}}"
                   wx:for-item="c"
                   wx:key="id"
-                  class="course-card"
-                  style="top:{{c.top}}rpx; height:{{c.height}}rpx; background:{{c.color}};"
+                  class="course-card {{c.isCurrentWeek ? '' : 'course-card-gray'}}"
+                  style="top:{{c.top}}rpx; height:{{c.height}}rpx; background:{{c.color}}; z-index:{{c.isCurrentWeek ? 10 : 5}};"
                   data-course="{{c}}"
                   catchtap="onCourseTap"
                 >

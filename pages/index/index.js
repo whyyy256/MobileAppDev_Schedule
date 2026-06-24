@@ -155,7 +155,10 @@ Page({
 
   buildScheduleData() {
     const { currentWeek, courses, showDays, cellHeight, lessonTimes, morn, afternoon, evening } = this.data
-    const weekCourses = util.getCoursesByWeek(courses, currentWeek)
+    const weekCourses = courses.map(c => ({
+      ...c,
+      isCurrentWeek: !!(c.weeks && c.weeks.includes(currentWeek))
+    }))
 
     const dayColumns = []
     for (let day = 1; day <= showDays; day++) {

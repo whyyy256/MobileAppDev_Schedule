@@ -401,6 +401,11 @@ page {
   z-index: 5;
 }
 
+.course-card-gray {
+  filter: grayscale(100%);
+  opacity: 0.45;
+}
+
 .c-name {
   font-size: 21rpx;
   font-weight: 700;
