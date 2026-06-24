@@ -36,6 +36,9 @@ Page({
     hScrollLeft: 0,
     gScrollLeft: 0,
 
+    // 空白格选中态（点第一下出现加号，点第二下进入添加课程）
+    selectedCell: null,
+
     // 自定义周次选择弹窗
     showWeekPicker: false,
     pickerValue: [0],
@@ -149,6 +152,7 @@ Page({
 
   // 从添加课程/设置页返回后重新加载课程与设置
   onShow() {
+    this.setData({ selectedCell: null })
     this.loadSettings()
     this.loadCourses()
   },
@@ -250,21 +254,22 @@ Page({
   confirmWeek() {
     this.setData({
       currentWeek: this.data.tempWeek,
-      showWeekPicker: false
+      showWeekPicker: false,
+      selectedCell: null
     })
     this.buildScheduleData()
   },
 
   onPrevWeek() {
     if (this.data.currentWeek > 1) {
-      this.setData({ currentWeek: this.data.currentWeek - 1 })
+      this.setData({ currentWeek: this.data.currentWeek - 1, selectedCell: null })
       this.buildScheduleData()
     }
   },
 
   onNextWeek() {
     if (this.data.currentWeek < this.data.totalWeeks) {
-      this.setData({ currentWeek: this.data.currentWeek + 1 })
+      this.setData({ currentWeek: this.data.currentWeek + 1, selectedCell: null })
       this.buildScheduleData()
     }
   },
@@ -355,6 +360,20 @@ Page({
     const course = e.currentTarget.dataset.course
     if (course) {
       wx.navigateTo({ url: `/pages/addCourse/addCourse?id=${course.id}` })
+    }
+  },
+
+  onEmptyCellTap(e) {
+    const day = parseInt(e.currentTarget.dataset.day)
+    const lesson = parseInt(e.currentTarget.dataset.lesson)
+    const selected = this.data.selectedCell
+    if (selected && selected.day === day && selected.lesson === lesson) {
+      this.setData({ selectedCell: null })
+      wx.navigateTo({
+        url: `/pages/addCourse/addCourse?day=${day}&startLesson=${lesson}`
+      })
+    } else {
+      this.setData({ selectedCell: { day, lesson } })
     }
   },
 

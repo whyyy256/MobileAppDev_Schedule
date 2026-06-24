@@ -62,10 +62,13 @@ Page({
         wx.setNavigationBarTitle({ title: '编辑课程' })
       }
     } else {
-      // 新增模式，设置默认颜色
-      this.setData({
-        color: util.getRandomColor()
-      })
+      // 新增模式，设置默认颜色，并接收从首页传入的星期和节次
+      const defaults = { color: util.getRandomColor() }
+      const presetDay = parseInt(options.day)
+      const presetStart = parseInt(options.startLesson)
+      if (presetDay >= 1 && presetDay <= 7) defaults.day = presetDay
+      if (presetStart >= 1 && presetStart <= maxLessons) defaults.startLesson = presetStart
+      this.setData(defaults)
     }
   },
 
