@@ -37,6 +37,43 @@ const COURSE_COLORS = [
   '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52BE80'
 ]
 
+// 内置法定节假日数据（放假日期 + 调休上班日期），按年份维护
+const BUILTIN_HOLIDAYS = {
+  2024: {
+    holidays: [
+      '2024-01-01',
+      '2024-02-10', '2024-02-11', '2024-02-12', '2024-02-13', '2024-02-14', '2024-02-15', '2024-02-16', '2024-02-17',
+      '2024-04-04', '2024-04-05', '2024-04-06',
+      '2024-05-01', '2024-05-02', '2024-05-03', '2024-05-04', '2024-05-05',
+      '2024-06-08', '2024-06-09', '2024-06-10',
+      '2024-09-15', '2024-09-16', '2024-09-17',
+      '2024-10-01', '2024-10-02', '2024-10-03', '2024-10-04', '2024-10-05', '2024-10-06', '2024-10-07'
+    ],
+    workdays: [
+      '2024-02-04', '2024-02-18',
+      '2024-04-07',
+      '2024-04-28', '2024-05-11',
+      '2024-09-14',
+      '2024-09-29', '2024-10-12'
+    ]
+  },
+  2025: {
+    holidays: [
+      '2025-01-01',
+      '2025-01-28', '2025-01-29', '2025-01-30', '2025-01-31', '2025-02-01', '2025-02-02', '2025-02-03', '2025-02-04',
+      '2025-04-04', '2025-04-05', '2025-04-06',
+      '2025-05-01', '2025-05-02', '2025-05-03', '2025-05-04', '2025-05-05',
+      '2025-05-31', '2025-06-01', '2025-06-02',
+      '2025-10-01', '2025-10-02', '2025-10-03', '2025-10-04', '2025-10-05', '2025-10-06', '2025-10-07', '2025-10-08'
+    ],
+    workdays: [
+      '2025-01-26', '2025-02-08',
+      '2025-04-27',
+      '2025-09-28', '2025-10-11'
+    ]
+  }
+}
+
 // ====== 学期管理 ======
 function getCurrentSemesterId() {
   try {
@@ -306,7 +343,7 @@ function getCurrentWeek(startDate, totalWeeks) {
   return currentWeek
 }
 
-// 根据开学日期和周次，计算本周周一到周日的日期（格式 month.date）
+// 根据开学日期和周次，计算本周周一到周日的日期（格式 YYYY-MM-DD）
 function getWeekDates(startDate, week, showDays) {
   const start = startDate ? new Date(startDate.replace(/-/g, '/')) : new Date()
   const day = start.getDay() // 0=周日, 1=周一...
@@ -318,9 +355,193 @@ function getWeekDates(startDate, week, showDays) {
   const days = showDays || 7
   for (let i = 0; i < days; i++) {
     const d = new Date(monday.getTime() + i * 24 * 60 * 60 * 1000)
-    dates.push(`${d.getMonth() + 1}.${d.getDate()}`)
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const dayNum = String(d.getDate()).padStart(2, '0')
+    dates.push(`${y}-${m}-${dayNum}`)
   }
   return dates
+}
+
+// 将 YYYY-MM-DD 格式化为显示的 month.date
+function formatDisplayDate(dateStr) {
+  if (!dateStr) return ''
+  const parts = dateStr.split('-')
+  if (parts.length !== 3) return dateStr
+  return `${parseInt(parts[1], 10)}.${parseInt(parts[2], 10)}`
+}
+
+// ====== 节假日 / 调休 ======
+
+// 将 Date 或日期字符串统一格式化为 YYYY-MM-DD
+function formatDateKey(date) {
+  const d = typeof date === 'string' ? new Date(date.replace(/-/g, '/')) : new Date(date)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+// 获取 setting 中保存的节假日配置
+function getHolidayConfig(settings) {
+  const s = settings || getSettings()
+  return s.holidayConfig || { holidays: [], workdays: [] }
+}
+
+// 获取某一年内置法定节假日
+function getBuiltinHolidays(year) {
+  return BUILTIN_HOLIDAYS[year] || { holidays: [], workdays: [] }
+}
+
+// 将内置节假日合并到用户配置中
+function mergeBuiltinHolidays(settings, year) {
+  const config = getHolidayConfig(settings)
+  const builtin = getBuiltinHolidays(year)
+  return {
+    holidays: Array.from(new Set([...(config.holidays || []), ...builtin.holidays])).sort(),
+    workdays: Array.from(new Set([...(config.workdays || []), ...builtin.workdays])).sort()
+  }
+}
+
+// 判断某日期状态：'holiday' 放假、'workday' 调休上班、'normal' 正常
+function getDateStatus(date, holidayConfig) {
+  const key = formatDateKey(date)
+  if (!holidayConfig) return 'normal'
+  if ((holidayConfig.holidays || []).includes(key)) return 'holiday'
+  if ((holidayConfig.workdays || []).includes(key)) return 'workday'
+  return 'normal'
+}
+
+// 根据本周日期数组返回每天状态
+function getDayStatus(dayDates, holidayConfig) {
+  return dayDates.map(d => getDateStatus(d, holidayConfig))
+}
+
+// 获取指定周次周一至周日的日期与状态
+function getWeekDateStatus(startDate, week, holidayConfig) {
+  const dayDates = getWeekDates(startDate, week, 7)
+  const dayStatus = getDayStatus(dayDates, holidayConfig)
+  return { dayDates, dayStatus }
+}
+
+// 获取指定周次实际应显示的天数（考虑调休上班日可能落在周末）
+function getEffectiveShowDays(showWeekend, dayStatus) {
+  const base = showWeekend ? 7 : 5
+  const lastWorkDay = dayStatus.reduce((max, s, idx) => s === 'workday' ? Math.max(max, idx + 1) : max, 0)
+  return Math.min(7, Math.max(base, lastWorkDay))
+}
+
+// 获取指定年份范围内所有内置年份列表
+function getBuiltinHolidayYears() {
+  return Object.keys(BUILTIN_HOLIDAYS).map(Number).sort((a, b) => a - b)
+}
+
+// 获取指定年份是否已有内置数据
+function hasBuiltinHolidays(year) {
+  return !!BUILTIN_HOLIDAYS[year]
+}
+
+// 获取指定周次中因调休需要显示的天数（用于在隐藏周末时仍显示调休日）
+function getWorkdayIndices(dayStatus) {
+  return dayStatus.reduce((arr, s, idx) => {
+    if (s === 'workday') arr.push(idx + 1)
+    return arr
+  }, [])
+}
+
+// 获取指定周次的节假日日期列表
+function getHolidayDatesInWeek(dayDates, dayStatus) {
+  return dayDates.filter((_, idx) => dayStatus[idx] === 'holiday')
+}
+
+// 获取指定周次的调休上班日期列表
+function getWorkdayDatesInWeek(dayDates, dayStatus) {
+  return dayDates.filter((_, idx) => dayStatus[idx] === 'workday')
+}
+
+// 获取指定周次中需要显示课程的天数（正常工作日 + 调休上班日，排除节假日）
+function getShowDaysInWeek(showWeekend, dayStatus) {
+  const showDays = getEffectiveShowDays(showWeekend, dayStatus)
+  return dayStatus.slice(0, showDays).map((s, idx) => ({
+    day: idx + 1,
+    status: s,
+    showCourse: s !== 'holiday'
+  }))
+}
+
+// 获取指定周次是否需要显示周末（因为有调休上班日落在周末）
+function shouldShowWeekend(showWeekend, dayStatus) {
+  return getEffectiveShowDays(showWeekend, dayStatus) > 5
+}
+
+// 获取指定周次的日期状态摘要（用于显示“本周有X天放假、X天调休”等提示）
+function getWeekHolidaySummary(dayDates, dayStatus) {
+  const holidays = getHolidayDatesInWeek(dayDates, dayStatus)
+  const workdays = getWorkdayDatesInWeek(dayDates, dayStatus)
+  return { holidays, workdays }
+}
+
+// 获取指定日期所属年份
+function getYearOfDate(date) {
+  return new Date(typeof date === 'string' ? date.replace(/-/g, '/') : date).getFullYear()
+}
+
+// 获取指定年份的所有内置节假日（包括未在学期内的）
+function getYearBuiltinHolidays(year) {
+  return getBuiltinHolidays(year)
+}
+
+// 获取指定年份的节假日配置（仅包含该年份的日期）
+function getHolidayConfigForYear(settings, year) {
+  const config = getHolidayConfig(settings)
+  const prefix = `${year}-`
+  return {
+    holidays: (config.holidays || []).filter(d => d.startsWith(prefix)),
+    workdays: (config.workdays || []).filter(d => d.startsWith(prefix))
+  }
+}
+
+// 保存节假日配置
+function saveHolidayConfig(holidayConfig, semesterId) {
+  const settings = getSettings(semesterId)
+  settings.holidayConfig = holidayConfig
+  return saveSettings(settings, semesterId)
+}
+
+// 添加节假日
+function addHoliday(date, semesterId) {
+  const settings = getSettings(semesterId)
+  const config = getHolidayConfig(settings)
+  const key = formatDateKey(date)
+  if (!config.holidays.includes(key)) {
+    config.holidays.push(key)
+    config.holidays.sort()
+  }
+  config.workdays = config.workdays.filter(d => d !== key)
+  return saveHolidayConfig(config, semesterId)
+}
+
+// 添加调休上班日
+function addWorkday(date, semesterId) {
+  const settings = getSettings(semesterId)
+  const config = getHolidayConfig(settings)
+  const key = formatDateKey(date)
+  if (!config.workdays.includes(key)) {
+    config.workdays.push(key)
+    config.workdays.sort()
+  }
+  config.holidays = config.holidays.filter(d => d !== key)
+  return saveHolidayConfig(config, semesterId)
+}
+
+// 删除节假日或调休上班日
+function removeHolidayOrWorkday(date, semesterId) {
+  const settings = getSettings(semesterId)
+  const config = getHolidayConfig(settings)
+  const key = formatDateKey(date)
+  config.holidays = config.holidays.filter(d => d !== key)
+  config.workdays = config.workdays.filter(d => d !== key)
+  return saveHolidayConfig(config, semesterId)
 }
 
 // 获取指定周次的课程
@@ -578,6 +799,15 @@ module.exports = {
   getRandomColor,
   getCurrentWeek,
   getWeekDates,
+  formatDisplayDate,
+  getHolidayConfig,
+  mergeBuiltinHolidays,
+  getDayStatus,
+  getEffectiveShowDays,
+  getBuiltinHolidayYears,
+  addHoliday,
+  addWorkday,
+  removeHolidayOrWorkday,
   getCoursesByWeek,
   getCoursesByDay,
   addCourse,

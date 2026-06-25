@@ -333,6 +333,39 @@ page {
   line-height: 1.2;
 }
 
+.day-status {
+  font-size: 18rpx;
+  color: #ff6b6b;
+  line-height: 1.2;
+  margin-bottom: 2rpx;
+  padding: 0 6rpx;
+  border-radius: 4rpx;
+  background: rgba(255, 107, 107, 0.12);
+}
+
+.day-cell-holiday {
+  background: #fff5f5;
+}
+
+.day-cell-holiday .day-name,
+.day-cell-holiday .day-date {
+  color: #ff6b6b;
+}
+
+.day-cell-workday {
+  background: #f5fff5;
+}
+
+.day-cell-workday .day-name,
+.day-cell-workday .day-date,
+.day-cell-workday .day-status {
+  color: #07c160;
+}
+
+.day-cell-workday .day-status {
+  background: rgba(7, 193, 96, 0.12);
+}
+
 /* ======= 底部区域（单一滚动容器） ======= */
 .table-bottom {
   flex: 1;

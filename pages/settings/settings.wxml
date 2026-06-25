@@ -24,12 +24,45 @@
       </view>
 
       <view class="form-item">
-        <text class="label">显示周末</text>
-        <switch checked="{{showWeekend}}" bindchange="onWeekendChange" />
+      <text class="label">显示周末</text>
+      <switch checked="{{showWeekend}}" bindchange="onWeekendChange" />
+    </view>
+  </view>
+
+  <!-- 节假日 / 调休 -->
+  <view class="section">
+    <view class="section-title">节假日 / 调休</view>
+
+    <view class="form-item">
+      <text class="label">已设置</text>
+      <view class="picker">
+        节假日 {{holidayConfig.holidays.length}} 天 · 调休 {{holidayConfig.workdays.length}} 天
       </view>
     </view>
 
-    <!-- 一天有几节课 -->
+    <view class="btn" bindtap="showHolidayImportDialog">导入内置法定节假日</view>
+    <view class="btn" data-mode="holiday" bindtap="openDatePicker">手动添加节假日</view>
+    <view class="btn" data-mode="workday" bindtap="openDatePicker">手动添加调休上班日</view>
+    <view class="btn" bindtap="clearHolidayConfig" style="color:#ff6b6b">清空配置</view>
+
+    <view wx:if="{{holidayConfig.holidays.length > 0}}" class="holiday-list">
+      <view class="holiday-title">节假日</view>
+      <view wx:for="{{holidayConfig.holidays}}" wx:key="*this" class="holiday-item">
+        <text>{{item}}</text>
+        <text class="holiday-delete" data-date="{{item}}" bindtap="deleteHoliday">删除</text>
+      </view>
+    </view>
+
+    <view wx:if="{{holidayConfig.workdays.length > 0}}" class="holiday-list">
+      <view class="holiday-title">调休上班日</view>
+      <view wx:for="{{holidayConfig.workdays}}" wx:key="*this" class="holiday-item">
+        <text>{{item}}</text>
+        <text class="holiday-delete" data-date="{{item}}" bindtap="deleteWorkday">删除</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 一天有几节课 -->
     <view class="section">
       <view class="section-title">每天课程节数</view>
 
@@ -93,6 +126,28 @@
           bindtap="onDaySelect"
         >{{item}}日</view>
       </scroll-view>
+    </view>
+  </view>
+</view>
+
+<!-- 导入法定节假日弹窗 -->
+<view class="dialog-mask" wx:if="{{showHolidayImport}}" bindtap="hideHolidayImportDialog">
+  <view class="dialog-panel" catchtap="stopBubbling">
+    <view class="dialog-title">导入法定节假日</view>
+    <view class="dialog-body">
+      <view
+        wx:for="{{builtinHolidayYears}}"
+        wx:key="*this"
+        class="dialog-row"
+        data-year="{{item}}"
+        bindtap="importBuiltinHolidays"
+      >
+        <text>{{item}} 年</text>
+        <text class="dialog-row-arrow">›</text>
+      </view>
+    </view>
+    <view class="dialog-actions single">
+      <view class="dialog-btn cancel" bindtap="hideHolidayImportDialog">取消</view>
     </view>
   </view>
 </view>

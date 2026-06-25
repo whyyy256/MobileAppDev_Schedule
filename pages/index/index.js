@@ -18,6 +18,8 @@ Page({
     lessonTimes: [],
     dayHeaders: [],
     dayDates: [],
+    dayDateTexts: [],
+    dayStatus: [],
     dayColumns: [],
     sections: [],
     showDays: 7,
@@ -49,6 +51,7 @@ Page({
     currentDay: 1,
     dayViewCourses: [],
     dayViewDate: '',
+    dayViewIsHoliday: false,
 
     // 自定义周次选择弹窗
     showWeekPicker: false,
@@ -148,15 +151,13 @@ Page({
       totalWeeks,
       weekOptions,
       showWeekend,
-      showDays,
       totalLessons,
       lessonTimes,
-      dayHeaders,
       morn,
       afternoon,
       evening
     }, () => {
-      this.calcLayout(() => this.buildScheduleData())
+      this.buildScheduleData()
     })
   },
 
@@ -174,80 +175,98 @@ Page({
   },
 
   buildScheduleData() {
-    const { currentWeek, courses, showDays, cellHeight, lessonTimes, morn, afternoon, evening, settings } = this.data
-    const dayDates = util.getWeekDates(settings && settings.startDate, currentWeek, showDays)
-    const weekCourses = courses.map(c => ({
-      ...c,
-      isCurrentWeek: !!(c.weeks && c.weeks.includes(currentWeek))
-    }))
+    const { currentWeek, courses, showWeekend, lessonTimes, morn, afternoon, evening, settings } = this.data
+    const holidayConfig = util.getHolidayConfig(settings)
+    const fullDayDates = util.getWeekDates(settings && settings.startDate, currentWeek, 7)
+    const fullDayStatus = util.getDayStatus(fullDayDates, holidayConfig)
+    const showDays = util.getEffectiveShowDays(showWeekend, fullDayStatus)
+    const dayDates = fullDayDates.slice(0, showDays)
+    const dayDateTexts = dayDates.map(d => util.formatDisplayDate(d))
+    const dayStatus = fullDayStatus.slice(0, showDays)
+    const allDays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+    const dayHeaders = allDays.slice(0, showDays)
 
-    const dayColumns = []
-    for (let day = 1; day <= showDays; day++) {
-      const dayCourses = weekCourses.filter(c => c.day === day)
-      const positioned = dayCourses.map(c => ({
-        ...c,
-        top: (c.startLesson - 1) * cellHeight,
-        height: c.lessonCount * cellHeight - 3
-      }))
-      dayColumns.push({ day, courses: positioned })
-    }
+    this.setData({ showDays, dayDates, dayDateTexts, dayStatus, dayHeaders }, () => {
+      this.calcLayout(() => {
+        const { cellHeight } = this.data
+        const weekCourses = courses.map(c => ({
+          ...c,
+          isCurrentWeek: !!(c.weeks && c.weeks.includes(currentWeek))
+        })).filter(c => c.day >= 1 && c.day <= showDays && dayStatus[c.day - 1] !== 'holiday')
 
-    // 分节：上午 / 下午 / 晚上，并在节间插入午休、晚休条带
-    const sectionDefs = [
-      { key: 'morning', count: morn, breakName: afternoon > 0 ? '午休' : null },
-      { key: 'afternoon', count: afternoon, breakName: evening > 0 ? '晚休' : null },
-      { key: 'evening', count: evening, breakName: null }
-    ].filter(s => s.count > 0)
-
-    let lessonStart = 1
-    const sections = sectionDefs.map(def => {
-      const secLessonTimes = lessonTimes.slice(lessonStart - 1, lessonStart - 1 + def.count)
-      const sectionEnd = lessonStart + def.count - 1
-      const secDayColumns = []
-
-      for (let day = 1; day <= showDays; day++) {
-        const dayCourses = weekCourses.filter(c => c.day === day)
-        const positioned = []
-
-        for (const c of dayCourses) {
-          const courseEnd = c.startLesson + c.lessonCount - 1
-          // 当前节段与课程的交集
-          const clipStart = Math.max(c.startLesson, lessonStart)
-          const clipEnd = Math.min(courseEnd, sectionEnd)
-          if (clipStart > clipEnd) continue
-
-          positioned.push({
+        const dayColumns = []
+        for (let day = 1; day <= showDays; day++) {
+          const dayCourses = weekCourses.filter(c => c.day === day)
+          const positioned = dayCourses.map(c => ({
             ...c,
-            top: (clipStart - lessonStart) * cellHeight,
-            height: (clipEnd - clipStart + 1) * cellHeight - 3,
-            _originalStartLesson: c.startLesson,
-            _originalLessonCount: c.lessonCount
-          })
+            top: (c.startLesson - 1) * cellHeight,
+            height: c.lessonCount * cellHeight - 3
+          }))
+          dayColumns.push({ day, courses: positioned })
         }
 
-        secDayColumns.push({ day, courses: positioned })
-      }
+        // 分节：上午 / 下午 / 晚上，并在节间插入午休、晚休条带
+        const sectionDefs = [
+          { key: 'morning', count: morn, breakName: afternoon > 0 ? '午休' : null },
+          { key: 'afternoon', count: afternoon, breakName: evening > 0 ? '晚休' : null },
+          { key: 'evening', count: evening, breakName: null }
+        ].filter(s => s.count > 0)
 
-      const section = {
-        key: def.key,
-        breakName: def.breakName,
-        lessonTimes: secLessonTimes,
-        dayColumns: secDayColumns
-      }
+        let lessonStart = 1
+        const sections = sectionDefs.map(def => {
+          const secLessonTimes = lessonTimes.slice(lessonStart - 1, lessonStart - 1 + def.count)
+          const sectionEnd = lessonStart + def.count - 1
+          const secDayColumns = []
 
-      lessonStart += def.count
-      return section
+          for (let day = 1; day <= showDays; day++) {
+            const dayCourses = weekCourses.filter(c => c.day === day)
+            const positioned = []
+
+            for (const c of dayCourses) {
+              const courseEnd = c.startLesson + c.lessonCount - 1
+              // 当前节段与课程的交集
+              const clipStart = Math.max(c.startLesson, lessonStart)
+              const clipEnd = Math.min(courseEnd, sectionEnd)
+              if (clipStart > clipEnd) continue
+
+              positioned.push({
+                ...c,
+                top: (clipStart - lessonStart) * cellHeight,
+                height: (clipEnd - clipStart + 1) * cellHeight - 3,
+                _originalStartLesson: c.startLesson,
+                _originalLessonCount: c.lessonCount
+              })
+            }
+
+            secDayColumns.push({ day, courses: positioned })
+          }
+
+          const section = {
+            key: def.key,
+            breakName: def.breakName,
+            lessonTimes: secLessonTimes,
+            dayColumns: secDayColumns
+          }
+
+          lessonStart += def.count
+          return section
+        })
+
+        this.setData({ dayColumns, sections })
+        this.buildDayView()
+      })
     })
-
-    this.setData({ dayDates, dayColumns, sections })
-    this.buildDayView()
   },
 
   buildDayView() {
-    const { currentWeek, currentDay, courses, lessonTimes, settings, showDays } = this.data
-    const dayDates = util.getWeekDates(settings && settings.startDate, currentWeek, showDays)
-    const dayViewDate = dayDates[currentDay - 1] || ''
-    const dayCourses = courses.filter(c =>
+    const { currentWeek, currentDay, courses, lessonTimes, settings, showDays, dayStatus, dayDates } = this.data
+    let dayViewDate = ''
+    let isHoliday = false
+    if (currentDay >= 1 && currentDay <= showDays) {
+      dayViewDate = util.formatDisplayDate(dayDates[currentDay - 1])
+      isHoliday = dayStatus[currentDay - 1] === 'holiday'
+    }
+    const dayCourses = isHoliday ? [] : courses.filter(c =>
       c.day === currentDay && c.weeks && c.weeks.includes(currentWeek)
     ).sort((a, b) => a.startLesson - b.startLesson).map(c => {
       const startTime = lessonTimes[c.startLesson - 1]
@@ -257,7 +276,7 @@ Page({
         timeText: startTime && endTime ? `${startTime.start}-${endTime.end}` : ''
       }
     })
-    this.setData({ dayViewCourses: dayCourses, dayViewDate })
+    this.setData({ dayViewCourses: dayCourses, dayViewDate, dayViewIsHoliday: isHoliday })
   },
 
   // ====== 滚动同步 ======

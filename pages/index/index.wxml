@@ -140,12 +140,13 @@
       >
         <view class="header-days">
           <view
-          class="day-cell"
+          class="day-cell {{dayStatus[index] === 'holiday' ? 'day-cell-holiday' : ''}} {{dayStatus[index] === 'workday' ? 'day-cell-workday' : ''}}"
           wx:for="{{dayHeaders}}"
           wx:key="*this"
           style="width:{{dayColWidth}}rpx; height:{{headerHeight}}rpx;"
         >
-          <text class="day-date">{{dayDates[index]}}</text>
+          <text class="day-status" wx:if="{{dayStatus[index] === 'holiday' || dayStatus[index] === 'workday'}}">{{dayStatus[index] === 'holiday' ? '休' : '班'}}</text>
+          <text class="day-date">{{dayDateTexts[index]}}</text>
           <text class="day-name">{{item}}</text>
         </view>
         </view>
@@ -251,7 +252,7 @@
       <text class="day-view-nav {{currentDay >= showDays ? 'disabled' : ''}}" bindtap="onNextDay">›</text>
     </view>
     <scroll-view class="day-view-list" scroll-y enhanced show-scrollbar="{{false}}">
-      <view wx:if="{{dayViewCourses.length === 0}}" class="day-view-empty">今日无课</view>
+      <view wx:if="{{dayViewCourses.length === 0}}" class="day-view-empty">{{dayViewIsHoliday ? '今日放假' : '今日无课'}}</view>
       <view
         wx:for="{{dayViewCourses}}"
         wx:key="id"

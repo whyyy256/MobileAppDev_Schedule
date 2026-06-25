@@ -27,13 +27,18 @@ Page({
 
     // 自定义日期选择弹窗
     showDatePicker: false,
-    datePickerMode: 'current', // 'current' 或 'new'
+    datePickerMode: 'current', // 'current' / 'new' / 'holiday' / 'workday'
     pickerYear: 2024,
     pickerMonth: 1,
     pickerDay: 1,
     years: [],
     months: Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')),
-    days: []
+    days: [],
+
+    // 节假日 / 调休配置
+    holidayConfig: { holidays: [], workdays: [] },
+    builtinHolidayYears: [],
+    showHolidayImport: false
   },
 
   onLoad() {
@@ -42,7 +47,7 @@ Page({
     for (let y = currentYear - 5; y <= currentYear + 5; y++) {
       years.push(String(y))
     }
-    this.setData({ years })
+    this.setData({ years, builtinHolidayYears: util.getBuiltinHolidayYears() })
     this.loadData()
   },
 
@@ -63,6 +68,7 @@ Page({
       afternoon: settings.lessonsPerDay.afternoon,
       evening: settings.lessonsPerDay.evening,
       showWeekend: settings.showWeekend !== false,
+      holidayConfig: settings.holidayConfig || { holidays: [], workdays: [] },
       semesters,
       currentSemesterId
     })
@@ -96,7 +102,9 @@ Page({
   // ====== 自定义日期选择器 ======
   openDatePicker(e) {
     const mode = e.currentTarget.dataset.mode || 'current'
-    const dateStr = mode === 'current' ? this.data.startDate : this.data.newStartDate
+    let dateStr = this.data.startDate
+    if (mode === 'new') dateStr = this.data.newStartDate
+    if (mode === 'holiday' || mode === 'workday') dateStr = this.formatDate(new Date())
     const date = dateStr ? new Date(dateStr.replace(/-/g, '/')) : new Date()
     const year = date.getFullYear()
     const month = date.getMonth() + 1
@@ -105,7 +113,7 @@ Page({
     this.setData({
       showDatePicker: true,
       datePickerMode: mode,
-      pickerYear: year,
+      pickerYear: String(year),
       pickerMonth: String(month).padStart(2, '0'),
       pickerDay: String(day).padStart(2, '0')
     }, () => {
@@ -128,7 +136,7 @@ Page({
 
   onYearSelect(e) {
     const year = parseInt(e.currentTarget.dataset.value)
-    this.setData({ pickerYear: year })
+    this.setData({ pickerYear: String(year) })
     this.updateDays(year, parseInt(this.data.pickerMonth))
   },
 
@@ -147,8 +155,18 @@ Page({
     const date = `${pickerYear}-${pickerMonth}-${pickerDay}`
     if (datePickerMode === 'current') {
       this.setData({ startDate: date, showDatePicker: false })
-    } else {
+    } else if (datePickerMode === 'new') {
       this.setData({ newStartDate: date, showDatePicker: false })
+    } else if (datePickerMode === 'holiday') {
+      util.addHoliday(date)
+      this.setData({ showDatePicker: false })
+      this.loadData()
+      wx.showToast({ title: '已添加节假日', icon: 'success' })
+    } else if (datePickerMode === 'workday') {
+      util.addWorkday(date)
+      this.setData({ showDatePicker: false })
+      this.loadData()
+      wx.showToast({ title: '已添加调休日', icon: 'success' })
     }
   },
 
@@ -193,6 +211,55 @@ Page({
     util.saveSettings(newSettings)
 
     wx.showToast({ title: '保存成功', icon: 'success' })
+  },
+
+  // ====== 节假日 / 调休 ======
+  showHolidayImportDialog() {
+    this.setData({ showHolidayImport: true })
+  },
+
+  hideHolidayImportDialog() {
+    this.setData({ showHolidayImport: false })
+  },
+
+  importBuiltinHolidays(e) {
+    const year = parseInt(e.currentTarget.dataset.year)
+    const settings = util.getSettings()
+    const newConfig = util.mergeBuiltinHolidays(settings, year)
+    const newSettings = { ...settings, holidayConfig: newConfig }
+    util.saveSettings(newSettings)
+    this.setData({ holidayConfig: newConfig, showHolidayImport: false })
+    wx.showToast({ title: `已导入 ${year} 年节假日`, icon: 'success' })
+  },
+
+  deleteHoliday(e) {
+    const date = e.currentTarget.dataset.date
+    util.removeHolidayOrWorkday(date)
+    this.loadData()
+    wx.showToast({ title: '已删除', icon: 'success' })
+  },
+
+  deleteWorkday(e) {
+    const date = e.currentTarget.dataset.date
+    util.removeHolidayOrWorkday(date)
+    this.loadData()
+    wx.showToast({ title: '已删除', icon: 'success' })
+  },
+
+  clearHolidayConfig() {
+    wx.showModal({
+      title: '确认清空',
+      content: '清空后将恢复默认课程显示，是否继续？',
+      success: (res) => {
+        if (res.confirm) {
+          const settings = util.getSettings()
+          const newSettings = { ...settings, holidayConfig: { holidays: [], workdays: [] } }
+          util.saveSettings(newSettings)
+          this.loadData()
+          wx.showToast({ title: '已清空', icon: 'success' })
+        }
+      }
+    })
   },
 
   // ====== 新建学期 ======
