@@ -339,3 +339,10 @@ page {
   font-size: 32rpx;
   color: #ccc;
 }
+
+.holiday-toggle {
+  text-align: center;
+  padding: 20rpx 0;
+  font-size: 28rpx;
+  color: #07c160;
+}

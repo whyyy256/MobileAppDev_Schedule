@@ -47,17 +47,23 @@
 
     <view wx:if="{{holidayConfig.holidays.length > 0}}" class="holiday-list">
       <view class="holiday-title">节假日</view>
-      <view wx:for="{{holidayConfig.holidays}}" wx:key="*this" class="holiday-item">
+      <view wx:for="{{holidayConfig.holidays}}" wx:key="*this" class="holiday-item" wx:if="{{index < 4 || showAllHolidays}}">
         <text>{{item}}</text>
         <text class="holiday-delete" data-date="{{item}}" bindtap="deleteHoliday">删除</text>
+      </view>
+      <view wx:if="{{holidayConfig.holidays.length > 4}}" class="holiday-toggle" bindtap="toggleHolidays">
+        {{showAllHolidays ? '收起' : '展开'}}
       </view>
     </view>
 
     <view wx:if="{{holidayConfig.workdays.length > 0}}" class="holiday-list">
       <view class="holiday-title">调休上班日</view>
-      <view wx:for="{{holidayConfig.workdays}}" wx:key="*this" class="holiday-item">
+      <view wx:for="{{holidayConfig.workdays}}" wx:key="*this" class="holiday-item" wx:if="{{index < 4 || showAllWorkdays}}">
         <text>{{item}}</text>
         <text class="holiday-delete" data-date="{{item}}" bindtap="deleteWorkday">删除</text>
+      </view>
+      <view wx:if="{{holidayConfig.workdays.length > 4}}" class="holiday-toggle" bindtap="toggleWorkdays">
+        {{showAllWorkdays ? '收起' : '展开'}}
       </view>
     </view>
   </view>

@@ -38,7 +38,9 @@ Page({
     // 节假日 / 调休配置
     holidayConfig: { holidays: [], workdays: [] },
     builtinHolidayYears: [],
-    showHolidayImport: false
+    showHolidayImport: false,
+    showAllHolidays: false,
+    showAllWorkdays: false
   },
 
   onLoad() {
@@ -220,6 +222,14 @@ Page({
 
   hideHolidayImportDialog() {
     this.setData({ showHolidayImport: false })
+  },
+
+  toggleHolidays() {
+    this.setData({ showAllHolidays: !this.data.showAllHolidays })
+  },
+
+  toggleWorkdays() {
+    this.setData({ showAllWorkdays: !this.data.showAllWorkdays })
   },
 
   importBuiltinHolidays(e) {
