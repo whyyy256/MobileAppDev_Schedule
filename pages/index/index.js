@@ -3,7 +3,7 @@ const util = require('../../utils/util.js')
 
 // 固定尺寸 (rpx)
 const TIME_COL_RPX = 100
-const HEADER_H_RPX = 64
+const HEADER_H_RPX = 96
 
 Page({
   data: {
@@ -17,6 +17,7 @@ Page({
     totalLessons: 11,
     lessonTimes: [],
     dayHeaders: [],
+    dayDates: [],
     dayColumns: [],
     sections: [],
     showDays: 7,
@@ -47,6 +48,7 @@ Page({
     viewMode: 'week',
     currentDay: 1,
     dayViewCourses: [],
+    dayViewDate: '',
 
     // 自定义周次选择弹窗
     showWeekPicker: false,
@@ -172,7 +174,8 @@ Page({
   },
 
   buildScheduleData() {
-    const { currentWeek, courses, showDays, cellHeight, lessonTimes, morn, afternoon, evening } = this.data
+    const { currentWeek, courses, showDays, cellHeight, lessonTimes, morn, afternoon, evening, settings } = this.data
+    const dayDates = util.getWeekDates(settings && settings.startDate, currentWeek, showDays)
     const weekCourses = courses.map(c => ({
       ...c,
       isCurrentWeek: !!(c.weeks && c.weeks.includes(currentWeek))
@@ -236,12 +239,14 @@ Page({
       return section
     })
 
-    this.setData({ dayColumns, sections })
+    this.setData({ dayDates, dayColumns, sections })
     this.buildDayView()
   },
 
   buildDayView() {
-    const { currentWeek, currentDay, courses, lessonTimes } = this.data
+    const { currentWeek, currentDay, courses, lessonTimes, settings, showDays } = this.data
+    const dayDates = util.getWeekDates(settings && settings.startDate, currentWeek, showDays)
+    const dayViewDate = dayDates[currentDay - 1] || ''
     const dayCourses = courses.filter(c =>
       c.day === currentDay && c.weeks && c.weeks.includes(currentWeek)
     ).sort((a, b) => a.startLesson - b.startLesson).map(c => {
@@ -252,7 +257,7 @@ Page({
         timeText: startTime && endTime ? `${startTime.start}-${endTime.end}` : ''
       }
     })
-    this.setData({ dayViewCourses: dayCourses })
+    this.setData({ dayViewCourses: dayCourses, dayViewDate })
   },
 
   // ====== 滚动同步 ======

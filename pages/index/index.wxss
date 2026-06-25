@@ -309,16 +309,28 @@ page {
 .day-cell {
   flex-shrink: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #333;
   border-right: 1rpx solid #e8e8e8;
 }
 
 .day-cell:last-child {
   border-right: none;
+}
+
+.day-date {
+  font-size: 20rpx;
+  color: #999;
+  line-height: 1.2;
+  margin-bottom: 4rpx;
+}
+
+.day-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.2;
 }
 
 /* ======= 底部区域（单一滚动容器） ======= */
@@ -654,11 +666,22 @@ page {
 }
 
 .day-view-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 120rpx;
+  text-align: center;
   font-size: 34rpx;
   font-weight: bold;
   color: #333;
-  min-width: 120rpx;
-  text-align: center;
+}
+
+.day-view-date {
+  font-size: 22rpx;
+  color: #999;
+  font-weight: normal;
+  margin-bottom: 4rpx;
 }
 
 .day-view-list {

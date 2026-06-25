@@ -306,6 +306,23 @@ function getCurrentWeek(startDate, totalWeeks) {
   return currentWeek
 }
 
+// 根据开学日期和周次，计算本周周一到周日的日期（格式 month.date）
+function getWeekDates(startDate, week, showDays) {
+  const start = startDate ? new Date(startDate.replace(/-/g, '/')) : new Date()
+  const day = start.getDay() // 0=周日, 1=周一...
+  const offset = day === 0 ? -6 : 1 - day
+  const firstMonday = new Date(start.getTime() + offset * 24 * 60 * 60 * 1000)
+  const monday = new Date(firstMonday.getTime() + (week - 1) * 7 * 24 * 60 * 60 * 1000)
+
+  const dates = []
+  const days = showDays || 7
+  for (let i = 0; i < days; i++) {
+    const d = new Date(monday.getTime() + i * 24 * 60 * 60 * 1000)
+    dates.push(`${d.getMonth() + 1}.${d.getDate()}`)
+  }
+  return dates
+}
+
 // 获取指定周次的课程
 function getCoursesByWeek(courses, week) {
   return courses.filter(course => {
@@ -560,6 +577,7 @@ module.exports = {
   generateId,
   getRandomColor,
   getCurrentWeek,
+  getWeekDates,
   getCoursesByWeek,
   getCoursesByDay,
   addCourse,

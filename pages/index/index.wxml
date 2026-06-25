@@ -140,11 +140,14 @@
       >
         <view class="header-days">
           <view
-            class="day-cell"
-            wx:for="{{dayHeaders}}"
-            wx:key="*this"
-            style="width:{{dayColWidth}}rpx; height:{{headerHeight}}rpx;"
-          >{{item}}</view>
+          class="day-cell"
+          wx:for="{{dayHeaders}}"
+          wx:key="*this"
+          style="width:{{dayColWidth}}rpx; height:{{headerHeight}}rpx;"
+        >
+          <text class="day-date">{{dayDates[index]}}</text>
+          <text class="day-name">{{item}}</text>
+        </view>
         </view>
       </scroll-view>
     </view>
@@ -241,7 +244,10 @@
   <view class="day-view" wx:if="{{viewMode === 'day'}}">
     <view class="day-view-header">
       <text class="day-view-nav {{currentDay <= 1 ? 'disabled' : ''}}" bindtap="onPrevDay">‹</text>
-      <text class="day-view-title">{{dayHeaders[currentDay - 1]}}</text>
+      <view class="day-view-title">
+        <text class="day-view-date">{{dayViewDate}}</text>
+        <text>{{dayHeaders[currentDay - 1]}}</text>
+      </view>
       <text class="day-view-nav {{currentDay >= showDays ? 'disabled' : ''}}" bindtap="onNextDay">›</text>
     </view>
     <scroll-view class="day-view-list" scroll-y enhanced show-scrollbar="{{false}}">
