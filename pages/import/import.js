@@ -108,12 +108,14 @@ Page({
           wx.showToast({ title: `识别到 ${courses.length} 门课程`, icon: 'none' })
           this.setData({ previewCourses: courses })
         } else if (result.isBackup) {
+          const backupData = typeof content === 'string' ? JSON.parse(content) : content
           wx.showModal({
             title: '检测到备份文件',
-            content: '该文件为完整备份文件，导入后将覆盖当前所有数据，是否继续？',
+            content: '该文件为完整备份文件，请选择操作方式',
+            confirmText: '恢复全部',
+            cancelText: '仅导课程',
             success: (res) => {
               if (res.confirm) {
-                const backupData = typeof content === 'string' ? JSON.parse(content) : content
                 const restoreResult = util.restoreFromBackup(backupData)
                 if (restoreResult.success) {
                   wx.showToast({ title: '恢复成功', icon: 'success' })
@@ -127,7 +129,21 @@ Page({
                   })
                 }
               } else {
-                this.navigateBackIfEmpty()
+                // 仅导入当前学期的课程，追加到当前学期
+                const currentId = backupData.currentSemesterId
+                const item = backupData.data && backupData.data[currentId]
+                const courses = (item && item.courses) || []
+                if (courses.length === 0) {
+                  wx.showToast({ title: '备份中没有课程', icon: 'none' })
+                  this.navigateBackIfEmpty()
+                  return
+                }
+                const previewCourses = courses.map(c => ({
+                  ...c,
+                  color: c.color || util.getRandomColor()
+                }))
+                wx.showToast({ title: `识别到 ${previewCourses.length} 门课程`, icon: 'none' })
+                this.setData({ previewCourses })
               }
             }
           })
