@@ -3,8 +3,7 @@ const util = require('../../utils/util.js')
 
 Page({
   data: {
-    mode: 'file', // 'file' | 'image'
-    imagePath: '', // 图片导入时选中的图片路径
+    mode: 'file',
     previewCourses: [], // 待导入的课程列表（未保存）
     settings: {},
     totalWeeks: 18,
@@ -50,14 +49,8 @@ Page({
       weekOptions: util.getWeeksList(totalWeeks)
     })
 
-    const mode = options.mode === 'image' ? 'image' : 'file'
-    this.setData({ mode })
-
-    if (mode === 'file') {
-      this.pickFile()
-    } else {
-      this.pickImage()
-    }
+    this.setData({ mode: 'file' })
+    this.pickFile()
   },
 
   // ====== 文件导入 ======
@@ -167,34 +160,8 @@ Page({
     })
   },
 
-  // ====== 图片导入 ======
-  pickImage() {
-    wx.chooseMedia({
-      count: 1,
-      mediaType: ['image'],
-      sourceType: ['album', 'camera'],
-      success: (res) => {
-        const file = res.tempFiles && res.tempFiles[0]
-        if (!file) {
-          this.navigateBackIfEmpty()
-          return
-        }
-        this.setData({ imagePath: file.tempFilePath })
-        wx.showModal({
-          title: '图片导入说明',
-          content: '已选择课程表图片，请在下方对照图片手动添加/修正课程信息后确认导入。',
-          showCancel: false,
-          confirmText: '开始添加'
-        })
-      },
-      fail: () => {
-        this.navigateBackIfEmpty()
-      }
-    })
-  },
-
   navigateBackIfEmpty() {
-    if (this.data.previewCourses.length === 0 && !this.data.imagePath) {
+    if (this.data.previewCourses.length === 0) {
       wx.navigateBack()
     }
   },
@@ -373,9 +340,4 @@ Page({
     })
   },
 
-  onPreviewImageTap() {
-    if (this.data.imagePath) {
-      wx.previewImage({ urls: [this.data.imagePath] })
-    }
-  }
 })

@@ -526,12 +526,6 @@ Page({
   },
 
   onImportTap() {
-    wx.showActionSheet({
-      itemList: ['从文件导入（Excel/CSV/JSON）', '从图片导入（OCR 识别）'],
-      success: (res) => {
-        const mode = res.tapIndex === 1 ? 'image' : 'file'
-        wx.navigateTo({ url: `/pages/import/import?mode=${mode}` })
-      }
-    })
+    wx.navigateTo({ url: '/pages/import/import?mode=file' })
   }
 })

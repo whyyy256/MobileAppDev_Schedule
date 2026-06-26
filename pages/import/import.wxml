@@ -11,17 +11,8 @@
 
 <scroll-view class="scrollarea" scroll-y type="list">
   <view class="container">
-    <!-- 图片导入：展示选中的图片作为参考 -->
-    <view class="image-ref" wx:if="{{mode === 'image' && imagePath}}">
-      <image class="ref-img" src="{{imagePath}}" mode="widthFix" bindtap="onPreviewImageTap" />
-      <view class="ref-tip">点击图片可放大查看，请对照图片核对/添加下方课程</view>
-    </view>
-
     <!-- 导入来源说明 -->
-    <view class="source-tip">
-      <text wx:if="{{mode === 'file'}}">来源：文件导入（JSON / CSV）</text>
-      <text wx:else>来源：图片导入</text>
-    </view>
+    <view class="source-tip">来源：文件导入（JSON / CSV）</view>
 
     <!-- 预览课程列表 -->
     <view class="section">
