@@ -107,6 +107,30 @@ Page({
           }))
           wx.showToast({ title: `识别到 ${courses.length} 门课程`, icon: 'none' })
           this.setData({ previewCourses: courses })
+        } else if (result.isBackup) {
+          wx.showModal({
+            title: '检测到备份文件',
+            content: '该文件为完整备份文件，导入后将覆盖当前所有数据，是否继续？',
+            success: (res) => {
+              if (res.confirm) {
+                const backupData = typeof content === 'string' ? JSON.parse(content) : content
+                const restoreResult = util.restoreFromBackup(backupData)
+                if (restoreResult.success) {
+                  wx.showToast({ title: '恢复成功', icon: 'success' })
+                  setTimeout(() => wx.switchTab({ url: '/pages/index/index' }), 800)
+                } else {
+                  wx.showModal({
+                    title: '恢复失败',
+                    content: restoreResult.error || '无法恢复备份',
+                    showCancel: false,
+                    success: () => this.navigateBackIfEmpty()
+                  })
+                }
+              } else {
+                this.navigateBackIfEmpty()
+              }
+            }
+          })
         } else {
           wx.showModal({
             title: '解析失败',

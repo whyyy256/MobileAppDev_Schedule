@@ -346,3 +346,21 @@ page {
   font-size: 28rpx;
   color: #07c160;
 }
+
+.makeup-text {
+  font-size: 24rpx;
+  color: #999;
+  margin-left: 12rpx;
+  flex: 1;
+}
+
+.holiday-actions {
+  display: flex;
+  align-items: center;
+}
+
+.holiday-edit {
+  font-size: 26rpx;
+  color: #07c160;
+  padding: 6rpx 16rpx;
+}

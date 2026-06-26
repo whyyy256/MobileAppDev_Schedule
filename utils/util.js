@@ -542,8 +542,8 @@ function addHoliday(date, semesterId) {
   return saveHolidayConfig(config, semesterId)
 }
 
-// 添加调休上班日
-function addWorkday(date, semesterId) {
+// 添加调休上班日（makeupDay: 1-7 表示补周几，0 表示暂不选定）
+function addWorkday(date, makeupDay, semesterId) {
   const settings = getSettings(semesterId)
   const config = getHolidayConfig(settings)
   const key = formatDateKey(date)
@@ -552,7 +552,32 @@ function addWorkday(date, semesterId) {
     config.workdays.sort()
   }
   config.holidays = config.holidays.filter(d => d !== key)
+  if (!config.workdayMakeupMap) config.workdayMakeupMap = {}
+  if (makeupDay && makeupDay >= 1 && makeupDay <= 7) {
+    config.workdayMakeupMap[key] = makeupDay
+  }
   return saveHolidayConfig(config, semesterId)
+}
+
+// 设置/修改某个调休上班日的补课周几（makeupDay: 1-7，0 或不传表示取消）
+function setWorkdayMakeupDay(date, makeupDay, semesterId) {
+  const settings = getSettings(semesterId)
+  const config = getHolidayConfig(settings)
+  const key = formatDateKey(date)
+  if (!config.workdayMakeupMap) config.workdayMakeupMap = {}
+  if (makeupDay && makeupDay >= 1 && makeupDay <= 7) {
+    config.workdayMakeupMap[key] = makeupDay
+  } else {
+    delete config.workdayMakeupMap[key]
+  }
+  return saveHolidayConfig(config, semesterId)
+}
+
+// 获取某个调休上班日的补课周几，0 表示未指定
+function getWorkdayMakeupDay(date, holidayConfig) {
+  if (!holidayConfig || !holidayConfig.workdayMakeupMap) return 0
+  const key = formatDateKey(date)
+  return holidayConfig.workdayMakeupMap[key] || 0
 }
 
 // 删除节假日或调休上班日
@@ -562,6 +587,9 @@ function removeHolidayOrWorkday(date, semesterId) {
   const key = formatDateKey(date)
   config.holidays = config.holidays.filter(d => d !== key)
   config.workdays = config.workdays.filter(d => d !== key)
+  if (config.workdayMakeupMap) {
+    delete config.workdayMakeupMap[key]
+  }
   return saveHolidayConfig(config, semesterId)
 }
 
@@ -764,6 +792,10 @@ function parseCoursesJSON(content) {
     return { success: false, error: 'JSON 格式错误：' + e.message }
   }
   if (!Array.isArray(data)) {
+    // 检测是否为完整备份文件
+    if (data && typeof data.version === 'number' && Array.isArray(data.semesters) && data.data) {
+      return { success: false, error: '该文件为完整备份文件，将尝试直接恢复', isBackup: true }
+    }
     if (data && Array.isArray(data.courses)) data = data.courses
     else return { success: false, error: 'JSON 应为课程数组或包含 courses 字段' }
   }
@@ -800,6 +832,124 @@ function parseCoursesFromFile(filePath, content) {
   return parseCoursesCSV(content)
 }
 
+// ====== 数据备份与恢复 ======
+const BACKUP_VERSION = 1
+
+// 构造完整备份数据
+function buildBackupData() {
+  const currentSemesterId = getCurrentSemesterId()
+  const semesters = getSemesters()
+  const data = {}
+  semesters.forEach(s => {
+    data[s.id] = {
+      settings: getSettingsRaw(s.id),
+      courses: getCourses(s.id)
+    }
+  })
+  return {
+    version: BACKUP_VERSION,
+    exportTime: new Date().toISOString(),
+    currentSemesterId,
+    semesters,
+    data
+  }
+}
+
+// 从备份数据恢复到本地存储
+function restoreFromBackup(backupData) {
+  if (!backupData || typeof backupData !== 'object') {
+    return { success: false, error: '备份文件格式错误' }
+  }
+  if (backupData.version !== BACKUP_VERSION) {
+    return { success: false, error: '备份文件版本不支持' }
+  }
+  if (!backupData.semesters || !Array.isArray(backupData.semesters) || backupData.semesters.length === 0) {
+    return { success: false, error: '备份文件缺少学期列表' }
+  }
+
+  try {
+    // 先清除现有学期数据
+    const oldSemesters = getSemesters()
+    oldSemesters.forEach(s => {
+      wx.removeStorageSync(`settings_${s.id}`)
+      wx.removeStorageSync(`courses_${s.id}`)
+    })
+
+    // 先恢复学期列表，再恢复各学期数据
+    saveSemesters(backupData.semesters)
+
+    backupData.semesters.forEach(s => {
+      const item = backupData.data && backupData.data[s.id]
+      if (item) {
+        saveSettings(item.settings || DEFAULT_SETTINGS, s.id)
+        saveCourses(item.courses || [], s.id)
+      } else {
+        saveSettings(DEFAULT_SETTINGS, s.id)
+        saveCourses([], s.id)
+      }
+    })
+
+    setCurrentSemesterId(backupData.currentSemesterId || backupData.semesters[0].id)
+    return { success: true }
+  } catch (e) {
+    console.error('恢复备份失败', e)
+    return { success: false, error: '恢复失败：' + (e.message || e) }
+  }
+}
+
+// 导出备份到本地文件，返回文件路径（分享需由页面在 tap 同步流程中调用）
+function exportBackupToFile() {
+  const backupData = buildBackupData()
+  const dateStr = formatDateKey(new Date()).replace(/-/g, '')
+  const fileName = `schedule_backup_${dateStr}.json`
+  const filePath = `${wx.env.USER_DATA_PATH}/${fileName}`
+
+  try {
+    wx.getFileSystemManager().writeFileSync(
+      filePath,
+      JSON.stringify(backupData, null, 2),
+      'utf8'
+    )
+    return { success: true, filePath, fileName }
+  } catch (err) {
+    console.error('写入备份文件失败', err)
+    return { success: false, error: err.errMsg || '写入失败' }
+  }
+}
+
+// 从用户选择的文件导入备份
+function importBackupFromFile() {
+  return new Promise((resolve, reject) => {
+    wx.chooseMessageFile({
+      count: 1,
+      type: 'file',
+      extension: ['json'],
+      success: (res) => {
+        const file = res.tempFiles[0]
+        if (!file) {
+          reject({ success: false, error: '未选择文件' })
+          return
+        }
+        wx.getFileSystemManager().readFile({
+          filePath: file.path,
+          encoding: 'utf8',
+          success: (readRes) => {
+            try {
+              const backupData = JSON.parse(readRes.data)
+              const result = restoreFromBackup(backupData)
+              resolve(result)
+            } catch (e) {
+              reject({ success: false, error: '文件解析失败，请确认是有效的备份文件' })
+            }
+          },
+          fail: (err) => reject({ success: false, error: err.errMsg || '读取失败' })
+        })
+      },
+      fail: (err) => reject({ success: false, error: err.errMsg || '选择文件失败' })
+    })
+  })
+}
+
 module.exports = {
   DEFAULT_SETTINGS,
   COURSE_COLORS,
@@ -828,6 +978,8 @@ module.exports = {
   getBuiltinHolidayYears,
   addHoliday,
   addWorkday,
+  setWorkdayMakeupDay,
+  getWorkdayMakeupDay,
   removeHolidayOrWorkday,
   getCoursesByWeek,
   getCoursesByDay,
@@ -843,5 +995,9 @@ module.exports = {
   normalizeImportedCourse,
   parseCoursesJSON,
   parseCoursesCSV,
-  parseCoursesFromFile
+  parseCoursesFromFile,
+  buildBackupData,
+  restoreFromBackup,
+  exportBackupToFile,
+  importBackupFromFile
 }

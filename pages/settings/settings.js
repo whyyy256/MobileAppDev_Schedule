@@ -37,10 +37,26 @@ Page({
 
     // 节假日 / 调休配置
     holidayConfig: { holidays: [], workdays: [] },
+    displayHolidays: [],
+    displayWorkdays: [],
     builtinHolidayYears: [],
     showHolidayImport: false,
     showAllHolidays: false,
-    showAllWorkdays: false
+    showAllWorkdays: false,
+
+    // 补课周几选择弹窗
+    showMakeupDayPicker: false,
+    makeupDayPickerDate: '',
+    makeupDayOptions: [
+      { label: '周一', value: 1 },
+      { label: '周二', value: 2 },
+      { label: '周三', value: 3 },
+      { label: '周四', value: 4 },
+      { label: '周五', value: 5 },
+      { label: '周六', value: 6 },
+      { label: '周日', value: 7 },
+      { label: '暂不选定', value: 0 }
+    ]
   },
 
   onLoad() {
@@ -62,6 +78,16 @@ Page({
     const semesters = util.getSemesters()
     const currentSemesterId = util.getCurrentSemesterId()
 
+    const holidayConfig = settings.holidayConfig || { holidays: [], workdays: [] }
+    const dayNames = ['一', '二', '三', '四', '五', '六', '日']
+    const displayHolidays = (holidayConfig.holidays || []).map(date => ({ date }))
+    const displayWorkdays = (holidayConfig.workdays || []).map(date => ({
+      date,
+      makeupText: holidayConfig.workdayMakeupMap && holidayConfig.workdayMakeupMap[date]
+        ? `补周${dayNames[holidayConfig.workdayMakeupMap[date] - 1]}`
+        : '未指定'
+    }))
+
     this.setData({
       semesterName: settings.semesterName || '',
       startDate: settings.startDate || '',
@@ -70,7 +96,9 @@ Page({
       afternoon: settings.lessonsPerDay.afternoon,
       evening: settings.lessonsPerDay.evening,
       showWeekend: settings.showWeekend !== false,
-      holidayConfig: settings.holidayConfig || { holidays: [], workdays: [] },
+      holidayConfig,
+      displayHolidays,
+      displayWorkdays,
       semesters,
       currentSemesterId
     })
@@ -165,10 +193,7 @@ Page({
       this.loadData()
       wx.showToast({ title: '已添加节假日', icon: 'success' })
     } else if (datePickerMode === 'workday') {
-      util.addWorkday(date)
-      this.setData({ showDatePicker: false })
-      this.loadData()
-      wx.showToast({ title: '已添加调休日', icon: 'success' })
+      this.setData({ showDatePicker: false, showMakeupDayPicker: true, makeupDayPickerDate: date })
     }
   },
 
@@ -232,6 +257,28 @@ Page({
     this.setData({ showAllWorkdays: !this.data.showAllWorkdays })
   },
 
+  // 选择调休上班日补周几
+  selectMakeupDay(e) {
+    const makeupDay = parseInt(e.currentTarget.dataset.value)
+    const date = this.data.makeupDayPickerDate
+    util.addWorkday(date, makeupDay)
+    this.setData({ showMakeupDayPicker: false, makeupDayPickerDate: '' })
+    this.loadData()
+    const dayNames = ['一', '二', '三', '四', '五', '六', '日']
+    const msg = makeupDay === 0 ? '已添加调休日' : `已添加，补周${dayNames[makeupDay - 1]}`
+    wx.showToast({ title: msg, icon: 'success' })
+  },
+
+  hideMakeupDayPicker() {
+    this.setData({ showMakeupDayPicker: false, makeupDayPickerDate: '' })
+  },
+
+  // 修改某个调休上班日的补课周几
+  setWorkdayMakeup(e) {
+    const date = e.currentTarget.dataset.date
+    this.setData({ showMakeupDayPicker: true, makeupDayPickerDate: date })
+  },
+
   importBuiltinHolidays(e) {
     const year = parseInt(e.currentTarget.dataset.year)
     const settings = util.getSettings()
@@ -268,6 +315,41 @@ Page({
           this.loadData()
           wx.showToast({ title: '已清空', icon: 'success' })
         }
+      }
+    })
+  },
+
+  // ====== 数据备份与恢复 ======
+  exportBackup() {
+    const res = util.exportBackupToFile()
+    if (!res.success) {
+      wx.showToast({ title: res.error || '导出失败', icon: 'none' })
+      return
+    }
+    wx.shareFileMessage({
+      filePath: res.filePath,
+      fileName: res.fileName,
+      success: () => wx.showToast({ title: '导出成功', icon: 'success' }),
+      fail: err => wx.showToast({ title: err.errMsg || '分享失败', icon: 'none' })
+    })
+  },
+
+  importBackup() {
+    wx.showModal({
+      title: '确认导入',
+      content: '导入备份将覆盖当前所有数据，是否继续？',
+      success: (res) => {
+        if (!res.confirm) return
+        util.importBackupFromFile().then(result => {
+          if (result.success) {
+            this.loadData()
+            wx.showToast({ title: '导入成功', icon: 'success' })
+          } else {
+            wx.showToast({ title: result.error || '导入失败', icon: 'none' })
+          }
+        }).catch(err => {
+          wx.showToast({ title: err.error || '导入失败', icon: 'none' })
+        })
       }
     })
   },

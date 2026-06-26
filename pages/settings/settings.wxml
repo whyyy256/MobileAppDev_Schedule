@@ -45,27 +45,37 @@
     <view class="btn" data-mode="workday" bindtap="openDatePicker">手动添加调休上班日</view>
     <view class="btn" bindtap="clearHolidayConfig" style="color:#ff6b6b">清空配置</view>
 
-    <view wx:if="{{holidayConfig.holidays.length > 0}}" class="holiday-list">
+    <view wx:if="{{displayHolidays.length > 0}}" class="holiday-list">
       <view class="holiday-title">节假日</view>
-      <view wx:for="{{holidayConfig.holidays}}" wx:key="*this" class="holiday-item" wx:if="{{index < 4 || showAllHolidays}}">
-        <text>{{item}}</text>
-        <text class="holiday-delete" data-date="{{item}}" bindtap="deleteHoliday">删除</text>
+      <view wx:for="{{displayHolidays}}" wx:key="date" class="holiday-item" wx:if="{{index < 4 || showAllHolidays}}">
+        <text>{{item.date}}</text>
+        <text class="holiday-delete" data-date="{{item.date}}" bindtap="deleteHoliday">删除</text>
       </view>
-      <view wx:if="{{holidayConfig.holidays.length > 4}}" class="holiday-toggle" bindtap="toggleHolidays">
+      <view wx:if="{{displayHolidays.length > 4}}" class="holiday-toggle" bindtap="toggleHolidays">
         {{showAllHolidays ? '收起' : '展开'}}
       </view>
     </view>
 
-    <view wx:if="{{holidayConfig.workdays.length > 0}}" class="holiday-list">
+    <view wx:if="{{displayWorkdays.length > 0}}" class="holiday-list">
       <view class="holiday-title">调休上班日</view>
-      <view wx:for="{{holidayConfig.workdays}}" wx:key="*this" class="holiday-item" wx:if="{{index < 4 || showAllWorkdays}}">
-        <text>{{item}}</text>
-        <text class="holiday-delete" data-date="{{item}}" bindtap="deleteWorkday">删除</text>
+      <view wx:for="{{displayWorkdays}}" wx:key="date" class="holiday-item" wx:if="{{index < 4 || showAllWorkdays}}">
+        <text>{{item.date}}</text>
+        <text class="makeup-text">{{item.makeupText}}</text>
+        <view class="holiday-actions">
+          <text class="holiday-edit" data-date="{{item.date}}" bindtap="setWorkdayMakeup">修改</text>
+          <text class="holiday-delete" data-date="{{item.date}}" bindtap="deleteWorkday">删除</text>
+        </view>
       </view>
-      <view wx:if="{{holidayConfig.workdays.length > 4}}" class="holiday-toggle" bindtap="toggleWorkdays">
+      <view wx:if="{{displayWorkdays.length > 4}}" class="holiday-toggle" bindtap="toggleWorkdays">
         {{showAllWorkdays ? '收起' : '展开'}}
       </view>
     </view>
+  </view>
+
+  <!-- 数据备份 -->
+  <view class="section">
+    <view class="section-title">数据备份</view>
+    <view class="btn" bindtap="exportBackup">导出备份（分享文件）</view>
   </view>
 
   <!-- 一天有几节课 -->
@@ -154,6 +164,27 @@
     </view>
     <view class="dialog-actions single">
       <view class="dialog-btn cancel" bindtap="hideHolidayImportDialog">取消</view>
+    </view>
+  </view>
+</view>
+
+<!-- 调休上班日补课周几选择弹窗 -->
+<view class="dialog-mask" wx:if="{{showMakeupDayPicker}}" bindtap="hideMakeupDayPicker">
+  <view class="dialog-panel" catchtap="stopBubbling">
+    <view class="dialog-title">选择补周几的课</view>
+    <view class="dialog-body">
+      <view
+        wx:for="{{makeupDayOptions}}"
+        wx:key="value"
+        class="dialog-row"
+        data-value="{{item.value}}"
+        bindtap="selectMakeupDay"
+      >
+        <text>{{item.label}}</text>
+      </view>
+    </view>
+    <view class="dialog-actions single">
+      <view class="dialog-btn cancel" bindtap="hideMakeupDayPicker">取消</view>
     </view>
   </view>
 </view>

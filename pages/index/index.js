@@ -192,11 +192,19 @@ Page({
         const weekCourses = courses.map(c => ({
           ...c,
           isCurrentWeek: !!(c.weeks && c.weeks.includes(currentWeek))
-        })).filter(c => c.day >= 1 && c.day <= showDays && dayStatus[c.day - 1] !== 'holiday')
+        }))
+
+        // 调休上班日若指定了补课周几，则显示对应周的课程
+        const resolveCourseDay = (day) => {
+          if (dayStatus[day - 1] !== 'workday') return day
+          const makeupDay = util.getWorkdayMakeupDay(dayDates[day - 1], holidayConfig)
+          return (makeupDay >= 1 && makeupDay <= 7) ? makeupDay : day
+        }
 
         const dayColumns = []
         for (let day = 1; day <= showDays; day++) {
-          const dayCourses = weekCourses.filter(c => c.day === day)
+          const courseDay = resolveCourseDay(day)
+          const dayCourses = weekCourses.filter(c => c.day === courseDay && dayStatus[day - 1] !== 'holiday')
           const positioned = dayCourses.map(c => ({
             ...c,
             top: (c.startLesson - 1) * cellHeight,
@@ -219,7 +227,8 @@ Page({
           const secDayColumns = []
 
           for (let day = 1; day <= showDays; day++) {
-            const dayCourses = weekCourses.filter(c => c.day === day)
+            const courseDay = resolveCourseDay(day)
+            const dayCourses = weekCourses.filter(c => c.day === courseDay && dayStatus[day - 1] !== 'holiday')
             const positioned = []
 
             for (const c of dayCourses) {
@@ -260,14 +269,20 @@ Page({
 
   buildDayView() {
     const { currentWeek, currentDay, courses, lessonTimes, settings, showDays, dayStatus, dayDates } = this.data
+    const holidayConfig = util.getHolidayConfig(settings)
     let dayViewDate = ''
     let isHoliday = false
+    let courseDay = currentDay
     if (currentDay >= 1 && currentDay <= showDays) {
       dayViewDate = util.formatDisplayDate(dayDates[currentDay - 1])
       isHoliday = dayStatus[currentDay - 1] === 'holiday'
+      if (dayStatus[currentDay - 1] === 'workday') {
+        const makeupDay = util.getWorkdayMakeupDay(dayDates[currentDay - 1], holidayConfig)
+        if (makeupDay >= 1 && makeupDay <= 7) courseDay = makeupDay
+      }
     }
     const dayCourses = isHoliday ? [] : courses.filter(c =>
-      c.day === currentDay && c.weeks && c.weeks.includes(currentWeek)
+      c.day === courseDay && c.weeks && c.weeks.includes(currentWeek)
     ).sort((a, b) => a.startLesson - b.startLesson).map(c => {
       const startTime = lessonTimes[c.startLesson - 1]
       const endTime = lessonTimes[c.startLesson + c.lessonCount - 2]
