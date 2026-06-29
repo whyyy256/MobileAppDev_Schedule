@@ -498,6 +498,9 @@ page {
   color: #fff;
   text-align: center;
   word-break: break-all;
+  line-height: 1.25em;
+  width: 100%;
+  max-height: 3.75em;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;

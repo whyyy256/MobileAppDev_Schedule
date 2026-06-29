@@ -231,7 +231,7 @@
                   data-course="{{c}}"
                   catchtap="onCourseTap"
                 >
-                  <text class="c-name">{{c.name}}</text>
+                  <view class="c-name">{{c.name}}</view>
                   <text class="c-loc" wx:if="{{c.location}}">@{{c.location}}</text>
                 </view>
               </view>
