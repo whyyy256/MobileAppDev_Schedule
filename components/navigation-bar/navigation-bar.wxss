@@ -3,6 +3,10 @@
   --height: 44px;
   --left: 16px;
 }
+
+.weui-navigation-bar.dark {
+  --weui-FG-0:rgba(255,255,255,.9);
+}
 .weui-navigation-bar .android {
   --height: 48px;
 }

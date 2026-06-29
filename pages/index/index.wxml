@@ -2,8 +2,9 @@
 <navigation-bar
   title=""
   back="{{false}}"
-  color="black"
-  background="#FFF"
+  color="{{darkModeActive ? 'white' : 'black'}}"
+  background="{{darkModeActive ? '#1a1a1a' : '#FFF'}}"
+  ext-class="{{darkModeActive ? 'dark' : ''}}"
 >
   <view slot="left" class="nav-left" bindtap="onSettingsTap">
     <image class="nav-settings-icon" src="/assets/icons/settings.svg" mode="aspectFit" />
@@ -123,9 +124,13 @@
   </view>
 </view>
 
-<view class="container">
+<view class="container {{darkModeActive ? 'dark' : ''}}">
   <!-- 课程表 -->
-  <view class="schedule-wrap" wx:if="{{viewMode === 'week'}}">
+  <view
+    class="schedule-wrap"
+    wx:if="{{viewMode === 'week'}}"
+    style="{{backgroundImage ? 'background-image: url(' + backgroundImage + '); background-size: cover; background-position: center;' : ''}}"
+  >
 
     <!-- 顶部：固定角落 + 横向滚动的星期标题 -->
     <view class="table-top">

@@ -1,8 +1,8 @@
 <!--pages/settings/settings.wxml-->
-<navigation-bar title="学期设置" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<navigation-bar title="学期设置" back="{{true}}" color="{{darkModeActive ? 'white' : 'black'}}" background="{{darkModeActive ? '#1a1a1a' : '#FFF'}}" ext-class="{{darkModeActive ? 'dark' : ''}}"></navigation-bar>
 
-<scroll-view class="scrollarea" scroll-y type="list">
-  <view class="container">
+<scroll-view class="scrollarea {{darkModeActive ? 'dark' : ''}}" scroll-y type="list">
+  <view class="container {{darkModeActive ? 'dark' : ''}}">
 
     <!-- 当前学期 -->
     <view class="section">
@@ -95,6 +95,35 @@
       <view class="form-item">
         <text class="label">晚上节数</text>
         <input class="input number" type="number" value="{{evening}}" bindinput="onEveningInput" />
+      </view>
+    </view>
+
+    <!-- 个性化设置 -->
+    <view class="section">
+      <view class="section-title">个性化设置</view>
+
+      <view class="form-item form-item-vertical">
+        <view class="label-row">
+          <text class="label">课程表背景图片</text>
+          <view class="picker" wx:if="{{!backgroundImage}}" bindtap="onChooseBackgroundImage">选择图片</view>
+          <view class="picker danger" wx:if="{{backgroundImage}}" bindtap="onClearBackgroundImage">清除</view>
+        </view>
+        <view class="bg-preview-wrap" wx:if="{{backgroundImage}}">
+          <image class="bg-preview" src="{{backgroundImage}}" mode="aspectFill" bindtap="onChooseBackgroundImage" />
+        </view>
+      </view>
+
+      <view class="form-item">
+        <text class="label">深色模式</text>
+        <view class="dark-mode-options">
+          <view
+            wx:for="{{darkModeOptions}}"
+            wx:key="value"
+            class="dark-mode-option {{darkMode === item.value ? 'active' : ''}}"
+            data-value="{{item.value}}"
+            bindtap="onDarkModeChange"
+          >{{item.label}}</view>
+        </view>
       </view>
     </view>
 

@@ -7,10 +7,10 @@
   }
 </wxs>
 
-<navigation-bar title="{{isEdit ? '编辑课程' : '添加课程'}}" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<navigation-bar title="{{isEdit ? '编辑课程' : '添加课程'}}" back="{{true}}" color="{{darkModeActive ? 'white' : 'black'}}" background="{{darkModeActive ? '#1a1a1a' : '#FFF'}}" ext-class="{{darkModeActive ? 'dark' : ''}}"></navigation-bar>
 
-<scroll-view class="scrollarea" scroll-y type="list">
-  <view class="container">
+<scroll-view class="scrollarea {{darkModeActive ? 'dark' : ''}}" scroll-y type="list">
+  <view class="container {{darkModeActive ? 'dark' : ''}}">
     <!-- 基本信息 -->
     <view class="section">
       <view class="section-title">基本信息</view>

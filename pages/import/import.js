@@ -7,6 +7,7 @@ Page({
     previewCourses: [], // 待导入的课程列表（未保存）
     settings: {},
     totalWeeks: 18,
+    darkModeActive: false,
 
     // 编辑弹窗
     showEdit: false,
@@ -45,6 +46,7 @@ Page({
     this.setData({
       settings,
       totalWeeks,
+      darkModeActive: util.isDarkModeEnabled(settings),
       lessonOptions: Array.from({ length: maxLessons }, (_, i) => i + 1),
       weekOptions: util.getWeeksList(totalWeeks)
     })

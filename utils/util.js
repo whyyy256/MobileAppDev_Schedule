@@ -15,6 +15,10 @@ const DEFAULT_SETTINGS = {
     classMinutes: 45, // 每节课时长
     breakMinutes: 10 // 课间休息
   },
+  // 个性化设置
+  backgroundImage: '', // 课程表背景图片路径（本地临时路径或 wxfile://）
+  darkMode: 'light', // 主题模式：'light' | 'dark' | 'auto'
+
   // 默认每节课上下课时间
   lessonTimes: [
     { lesson: 1, start: '08:00', end: '08:45', section: 'morning' },
@@ -269,6 +273,19 @@ function saveSettings(settings, semesterId) {
     return true
   } catch (e) {
     console.error('保存设置失败', e)
+    return false
+  }
+}
+
+// 判断当前是否应使用深色模式（处理 'auto' 跟随系统）
+function isDarkModeEnabled(settings) {
+  const mode = settings && settings.darkMode ? settings.darkMode : 'light'
+  if (mode === 'dark') return true
+  if (mode === 'light') return false
+  try {
+    const info = wx.getSystemInfoSync()
+    return info.theme === 'dark'
+  } catch (e) {
     return false
   }
 }
@@ -965,6 +982,7 @@ module.exports = {
   getCourses,
   saveSettings,
   getSettings,
+  isDarkModeEnabled,
   getLessonTimes,
   generateId,
   getRandomColor,

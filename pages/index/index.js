@@ -70,7 +70,11 @@ Page({
     selectHour: '08',
     selectMinute: '00',
     hours: Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')),
-    minutes: Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))
+    minutes: Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')),
+
+    // 个性化设置
+    backgroundImage: '',
+    darkModeActive: false
   },
 
   _syncing: false,
@@ -78,6 +82,17 @@ Page({
   onLoad() {
     this.loadSettings()
     this.loadCourses()
+    this.listenThemeChange()
+  },
+
+  listenThemeChange() {
+    if (!wx.onThemeChange) return
+    wx.onThemeChange(({ theme }) => {
+      const settings = this.data.settings
+      if (settings && settings.darkMode === 'auto') {
+        this.setData({ darkModeActive: theme === 'dark' })
+      }
+    })
   },
 
   // 根据屏幕尺寸计算每天列宽和每节课高度，使表格刚好铺满屏幕
@@ -142,6 +157,8 @@ Page({
 
     const totalWeeks = settings.totalWeeks || 18
     const weekOptions = Array.from({ length: totalWeeks }, (_, i) => `第 ${i + 1} 周`)
+    const backgroundImage = settings.backgroundImage || ''
+    const darkModeActive = util.isDarkModeEnabled(settings)
 
     this.setData({
       settings,
@@ -155,7 +172,9 @@ Page({
       lessonTimes,
       morn,
       afternoon,
-      evening
+      evening,
+      backgroundImage,
+      darkModeActive
     }, () => {
       this.buildScheduleData()
     })

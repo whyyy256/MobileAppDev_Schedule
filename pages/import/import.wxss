@@ -352,3 +352,152 @@ page {
   font-weight: bold;
   background: #f5fff8;
 }
+
+/* ======= 深色模式 ======= */
+.scrollarea.dark,
+.dark .container {
+  background: #111;
+}
+
+.dark .source-tip {
+  color: #777;
+}
+
+.dark .section {
+  background: #1e1e1e;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+}
+
+.dark .section-title {
+  color: #f0f0f0;
+}
+
+.dark .empty-tip {
+  color: #666;
+}
+
+.dark .course-item {
+  background: #2a2a2a;
+}
+
+.dark .course-name {
+  color: #f0f0f0;
+}
+
+.dark .course-meta {
+  color: #aaa;
+}
+
+.dark .course-weeks {
+  color: #888;
+}
+
+.dark .op-edit {
+  color: #4dd686;
+  background: rgba(7, 193, 96, 0.12);
+}
+
+.dark .op-del {
+  color: #ff8585;
+  background: rgba(255, 77, 79, 0.12);
+}
+
+.dark .btn-add {
+  background: #2a2a2a;
+  color: #4dd686;
+  border-color: #4dd686;
+}
+
+.dark .btn-import {
+  background: #07c160;
+  color: #fff;
+}
+
+.dark .edit-mask {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.dark .edit-panel {
+  background: #1e1e1e;
+}
+
+.dark .edit-header {
+  border-bottom-color: #333;
+}
+
+.dark .edit-title {
+  color: #f0f0f0;
+}
+
+.dark .form-item {
+  border-bottom-color: #2a2a2a;
+}
+
+.dark .label {
+  color: #aaa;
+}
+
+.dark .input {
+  color: #f0f0f0;
+}
+
+.dark .picker {
+  color: #e0e0e0;
+  background: #2a2a2a;
+}
+
+.dark .block-title {
+  color: #aaa;
+}
+
+.dark .action-btn {
+  color: #4dd686;
+}
+
+.dark .week-item {
+  color: #ccc;
+  background: #2a2a2a;
+}
+
+.dark .week-item.selected {
+  color: #1e1e1e;
+  background: #4dd686;
+}
+
+.dark .color-item.selected {
+  border-color: #fff;
+}
+
+.dark .picker-mask {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.dark .picker-panel {
+  background: #1e1e1e;
+}
+
+.dark .picker-header {
+  border-bottom-color: #333;
+}
+
+.dark .picker-title {
+  color: #f0f0f0;
+}
+
+.dark .picker-cancel {
+  color: #aaa;
+}
+
+.dark .picker-confirm {
+  color: #4dd686;
+}
+
+.dark .picker-item {
+  color: #ccc;
+  border-bottom-color: #2a2a2a;
+}
+
+.dark .picker-item.selected {
+  color: #4dd686;
+  background: rgba(7, 193, 96, 0.15);
+}

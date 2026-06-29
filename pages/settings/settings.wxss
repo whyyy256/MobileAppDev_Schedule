@@ -364,3 +364,199 @@ page {
   color: #07c160;
   padding: 6rpx 16rpx;
 }
+
+/* ======= 个性化设置 ======= */
+.form-item-vertical {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16rpx;
+}
+
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.picker.danger {
+  color: #ff4d4f;
+}
+
+.bg-preview-wrap {
+  width: 100%;
+  height: 200rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background: #f5f5f5;
+}
+
+.bg-preview {
+  width: 100%;
+  height: 100%;
+}
+
+.dark-mode-options {
+  display: flex;
+  gap: 16rpx;
+}
+
+.dark-mode-option {
+  padding: 10rpx 24rpx;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  color: #666;
+  background: #f5f5f5;
+}
+
+.dark-mode-option.active {
+  color: #07c160;
+  background: rgba(7, 193, 96, 0.12);
+  font-weight: 600;
+}
+
+/* ======= 深色模式 ======= */
+.scrollarea.dark,
+.dark .container {
+  background: #111;
+}
+
+.dark .section {
+  background: #1e1e1e;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+}
+
+.dark .section-title {
+  color: #f0f0f0;
+}
+
+.dark .form-item {
+  border-bottom-color: #2a2a2a;
+}
+
+.dark .label {
+  color: #aaa;
+}
+
+.dark .input {
+  color: #f0f0f0;
+}
+
+.dark .picker {
+  color: #e0e0e0;
+  background: #2a2a2a;
+}
+
+.dark .picker.danger {
+  color: #ff8585;
+}
+
+.dark .btn {
+  background: #2a2a2a;
+  color: #e0e0e0;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+}
+
+.dark .btn.primary {
+  background: #07c160;
+  color: #fff;
+}
+
+.dark .bg-preview-wrap {
+  background: #2a2a2a;
+}
+
+.dark .dark-mode-option {
+  color: #aaa;
+  background: #2a2a2a;
+}
+
+.dark .dark-mode-option.active {
+  color: #4dd686;
+  background: rgba(7, 193, 96, 0.2);
+}
+
+.dark .holiday-title {
+  color: #777;
+}
+
+.dark .holiday-item {
+  color: #ccc;
+  border-bottom-color: #2a2a2a;
+}
+
+.dark .holiday-delete {
+  color: #ff8585;
+}
+
+.dark .holiday-edit {
+  color: #4dd686;
+}
+
+.dark .holiday-toggle {
+  color: #4dd686;
+}
+
+.dark .makeup-text {
+  color: #888;
+}
+
+.dark .dialog-mask {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.dark .dialog-panel,
+.dark .date-picker-panel {
+  background: #1e1e1e;
+}
+
+.dark .dialog-title,
+.dark .date-picker-title {
+  color: #f0f0f0;
+}
+
+.dark .dialog-row {
+  border-bottom-color: #2a2a2a;
+  color: #ccc;
+}
+
+.dark .dialog-label {
+  color: #aaa;
+}
+
+.dark .dialog-input {
+  color: #f0f0f0;
+}
+
+.dark .dialog-picker {
+  color: #e0e0e0;
+  background: #2a2a2a;
+}
+
+.dark .dialog-btn.cancel {
+  background: #2a2a2a;
+  color: #aaa;
+}
+
+.dark .dialog-row-arrow {
+  color: #555;
+}
+
+.dark .date-picker-header {
+  border-bottom-color: #333;
+}
+
+.dark .date-picker-item {
+  color: #ccc;
+}
+
+.dark .date-picker-item.active {
+  color: #4dd686;
+}
+
+.dark .picker-cancel {
+  color: #aaa;
+}
+
+.dark .picker-confirm {
+  color: #4dd686;
+}

@@ -26,6 +26,7 @@ Page({
     // 设置
     settings: {},
     maxLessons: 12,
+    darkModeActive: false,
 
     // 自定义 picker 弹窗
     showPicker: false,
@@ -46,6 +47,7 @@ Page({
     this.setData({
       settings,
       maxLessons,
+      darkModeActive: util.isDarkModeEnabled(settings),
       lessonOptions: Array.from({ length: maxLessons }, (_, i) => i + 1),
       weekOptions
     })

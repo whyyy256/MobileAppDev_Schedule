@@ -764,3 +764,232 @@ page {
   font-size: 26rpx;
   color: #999;
 }
+
+/* ======= 深色模式 ======= */
+.dark .container {
+  background: #111;
+}
+
+.dark .schedule-wrap {
+  background-color: rgba(30, 30, 30, 0.92);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.3);
+}
+
+.dark .table-top {
+  background: #1a1a1a;
+  border-bottom-color: #333;
+}
+
+.dark .corner-cell {
+  background: #1a1a1a;
+  border-right-color: #333;
+}
+
+.dark .day-cell {
+  border-right-color: #333;
+}
+
+.dark .day-date {
+  color: #888;
+}
+
+.dark .day-name {
+  color: #e0e0e0;
+}
+
+.dark .day-cell-holiday {
+  background: rgba(255, 107, 107, 0.08);
+}
+
+.dark .day-cell-holiday .day-name,
+.dark .day-cell-holiday .day-date {
+  color: #ff8585;
+}
+
+.dark .day-cell-workday {
+  background: rgba(7, 193, 96, 0.08);
+}
+
+.dark .day-cell-workday .day-name,
+.dark .day-cell-workday .day-date,
+.dark .day-cell-workday .day-status {
+  color: #4dd686;
+}
+
+.dark .day-cell-workday .day-status {
+  background: rgba(7, 193, 96, 0.15);
+}
+
+.dark .time-col {
+  background: rgba(26, 26, 26, 0.95);
+  border-right-color: #333;
+}
+
+.dark .time-cell {
+  border-bottom-color: #2a2a2a;
+}
+
+.dark .t-num {
+  color: #ccc;
+}
+
+.dark .t-time {
+  color: #777;
+}
+
+.dark .cell-line {
+  background: rgba(38, 38, 38, 0.5);
+  border-bottom-color: #2a2a2a;
+}
+
+.dark .cell-line-selected {
+  background: #2a2a2a;
+}
+
+.dark .break-band {
+  background: #222;
+}
+
+.dark .break-band text {
+  color: #666;
+}
+
+.dark .day-col {
+  border-right-color: #333;
+}
+
+.dark .course-card-gray {
+  filter: grayscale(100%);
+  opacity: 0.35;
+}
+
+/* 日视图深色 */
+.dark .day-view {
+  background: #1e1e1e;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
+}
+
+.dark .day-view-header {
+  border-bottom-color: #333;
+}
+
+.dark .day-view-nav.disabled {
+  color: #444;
+}
+
+.dark .day-view-title {
+  color: #e0e0e0;
+}
+
+.dark .day-view-date {
+  color: #888;
+}
+
+.dark .day-view-empty {
+  color: #666;
+}
+
+.dark .day-view-item {
+  background: #2a2a2a;
+}
+
+.dark .day-view-time {
+  color: #999;
+}
+
+.dark .day-view-name {
+  color: #f0f0f0;
+}
+
+.dark .day-view-meta {
+  color: #888;
+}
+
+/* 按钮深色 */
+.dark .add-btn {
+  box-shadow: 0 8rpx 24rpx rgba(7, 193, 96, 0.25);
+}
+
+.dark .import-btn {
+  background: #2a2a2a;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.35);
+}
+
+/* 课程详情深色 */
+.dark .course-detail-panel {
+  background: #1e1e1e;
+}
+
+.dark .course-detail-name {
+  color: #f0f0f0;
+}
+
+.dark .course-detail-close {
+  color: #888;
+}
+
+.dark .course-detail-row {
+  border-bottom-color: #2a2a2a;
+}
+
+.dark .course-detail-label {
+  color: #888;
+}
+
+.dark .course-detail-value {
+  color: #e0e0e0;
+}
+
+/* 弹窗深色 */
+.dark .week-picker-panel,
+.dark .time-edit-panel,
+.dark .time-select-panel {
+  background: #1e1e1e;
+}
+
+.dark .time-edit-header,
+.dark .week-picker-header {
+  border-bottom-color: #333;
+}
+
+.dark .time-edit-title,
+.dark .picker-cancel,
+.dark .time-select-colon {
+  color: #e0e0e0;
+}
+
+.dark .time-edit-value {
+  color: #4dd686;
+  background: #2a2a2a;
+}
+
+.dark .time-select-item {
+  color: #ccc;
+}
+
+.dark .week-picker-item {
+  color: #ccc;
+}
+
+.dark .week-picker-item.active,
+.dark .time-select-item.active {
+  color: #4dd686;
+}
+
+/* 导航栏深色（通过外部类控制） */
+.dark .nav-settings-icon {
+  filter: invert(1);
+}
+
+.dark .nav-week-text {
+  color: #f0f0f0;
+}
+
+.dark .nav-week-current {
+  color: #4dd686;
+}
+
+.dark .nav-toggle {
+  background: #2a2a2a;
+  color: #e0e0e0;
+}

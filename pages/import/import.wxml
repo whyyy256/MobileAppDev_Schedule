@@ -7,10 +7,10 @@
   }
 </wxs>
 
-<navigation-bar title="导入课程表" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<navigation-bar title="导入课程表" back="{{true}}" color="{{darkModeActive ? 'white' : 'black'}}" background="{{darkModeActive ? '#1a1a1a' : '#FFF'}}" ext-class="{{darkModeActive ? 'dark' : ''}}"></navigation-bar>
 
-<scroll-view class="scrollarea" scroll-y type="list">
-  <view class="container">
+<scroll-view class="scrollarea {{darkModeActive ? 'dark' : ''}}" scroll-y type="list">
+  <view class="container {{darkModeActive ? 'dark' : ''}}">
     <!-- 导入来源说明 -->
     <view class="source-tip">来源：文件导入（JSON / CSV）</view>
 

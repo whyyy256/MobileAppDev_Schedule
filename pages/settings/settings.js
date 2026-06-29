@@ -12,6 +12,16 @@ Page({
     evening: 3,
     showWeekend: true,
 
+    // 个性化设置
+    backgroundImage: '',
+    darkMode: 'light',
+    darkModeActive: false,
+    darkModeOptions: [
+      { label: '浅色', value: 'light' },
+      { label: '深色', value: 'dark' },
+      { label: '跟随系统', value: 'auto' }
+    ],
+
     // 历史学期
     semesters: [],
     currentSemesterId: '',
@@ -96,6 +106,9 @@ Page({
       afternoon: settings.lessonsPerDay.afternoon,
       evening: settings.lessonsPerDay.evening,
       showWeekend: settings.showWeekend !== false,
+      backgroundImage: settings.backgroundImage || '',
+      darkMode: settings.darkMode || 'light',
+      darkModeActive: util.isDarkModeEnabled(settings),
       holidayConfig,
       displayHolidays,
       displayWorkdays,
@@ -127,6 +140,52 @@ Page({
 
   onWeekendChange(e) {
     this.setData({ showWeekend: e.detail.value })
+  },
+
+  stopBubbling() {},
+
+  // ====== 个性化设置 ======
+  onChooseBackgroundImage() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        const tempPath = res.tempFiles[0].tempFilePath
+        const fs = wx.getFileSystemManager()
+        fs.saveFile({
+          tempFilePath: tempPath,
+          success: (saveRes) => {
+            this.setData({ backgroundImage: saveRes.savedFilePath })
+          },
+          fail: () => {
+            // 保存失败时回退到临时路径
+            this.setData({ backgroundImage: tempPath })
+          }
+        })
+      },
+      fail: () => {
+        wx.showToast({ title: '选择图片失败', icon: 'none' })
+      }
+    })
+  },
+
+  onClearBackgroundImage() {
+    const path = this.data.backgroundImage
+    this.setData({ backgroundImage: '' })
+    if (path && path.startsWith('wxfile://')) {
+      try {
+        wx.getFileSystemManager().removeSavedFile({ filePath: path })
+      } catch (e) {}
+    }
+  },
+
+  onDarkModeChange(e) {
+    const value = e.currentTarget.dataset.value
+    this.setData({
+      darkMode: value,
+      darkModeActive: util.isDarkModeEnabled({ darkMode: value })
+    })
   },
 
   // ====== 自定义日期选择器 ======
@@ -201,7 +260,8 @@ Page({
   saveSettings() {
     const {
       semesterName, startDate, totalWeeks,
-      morning, afternoon, evening, showWeekend
+      morning, afternoon, evening, showWeekend,
+      backgroundImage, darkMode
     } = this.data
 
     const weeks = parseInt(totalWeeks)
@@ -232,6 +292,8 @@ Page({
       startDate,
       totalWeeks: weeks,
       showWeekend,
+      backgroundImage,
+      darkMode,
       lessonsPerDay: { morning: morn, afternoon: aft, evening: eve }
     }
 
