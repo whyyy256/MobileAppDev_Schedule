@@ -572,21 +572,28 @@ Page({
       }
       const canvas = res[0].node
       const ctx = canvas.getContext('2d')
-      const dpr = wx.getSystemInfoSync().pixelRatio || 1
-      const height = this.computeShareCardHeight()
+      // 限制缩放比例与高度，避免画布过大导致导出超时
+      const dpr = Math.min(wx.getSystemInfoSync().pixelRatio || 1, 2)
+      const height = Math.min(this.computeShareCardHeight(), 2000)
       canvas.width = 750 * dpr
       canvas.height = height * dpr
       ctx.scale(dpr, dpr)
       this.drawShareCard(ctx, height)
-      wx.canvasToTempFilePath({
-        canvas,
-        success: (fileRes) => {
-          this.setData({ shareImagePath: fileRes.tempFilePath })
-        },
-        fail: () => {
-          wx.showToast({ title: '生成失败', icon: 'none' })
-        }
-      })
+      // 延迟导出，确保渲染完成
+      setTimeout(() => {
+        wx.canvasToTempFilePath({
+          canvas,
+          fileType: 'jpg',
+          quality: 0.9,
+          success: (fileRes) => {
+            this.setData({ shareImagePath: fileRes.tempFilePath })
+          },
+          fail: (err) => {
+            console.error('canvasToTempFilePath fail', err)
+            wx.showToast({ title: '生成失败，请重试', icon: 'none' })
+          }
+        })
+      }, 100)
     })
   },
 

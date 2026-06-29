@@ -495,5 +495,20 @@ Page({
     const m = String(date.getMonth() + 1).padStart(2, '0')
     const d = String(date.getDate()).padStart(2, '0')
     return `${y}-${m}-${d}`
+  },
+
+  // ====== 清除当前课表 ======
+  onClearSchedule() {
+    wx.showModal({
+      title: '确认清除',
+      content: '清除后将删除当前学期的所有课程，此操作不可恢复，是否继续？',
+      confirmColor: '#ff4d4f',
+      success: (res) => {
+        if (res.confirm) {
+          util.saveCourses([])
+          wx.showToast({ title: '已清除', icon: 'success' })
+        }
+      }
+    })
   }
 })

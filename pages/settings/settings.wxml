@@ -132,6 +132,11 @@
     <view class="btn" bindtap="showNewSemesterDialog">新建新学期</view>
     <view class="btn" bindtap="showHistoryDialog">切换学期</view>
 
+    <!-- 危险操作 -->
+    <view class="danger-zone">
+      <view class="btn danger" bindtap="onClearSchedule">清除当前课表</view>
+    </view>
+
   </view>
 </scroll-view>
 

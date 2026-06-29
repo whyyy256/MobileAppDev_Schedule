@@ -90,6 +90,18 @@ page {
   font-weight: bold;
 }
 
+.danger-zone {
+  margin-top: 40rpx;
+  padding-top: 40rpx;
+  border-top: 1rpx dashed #ddd;
+}
+
+.btn.danger {
+  background: #fff;
+  color: #ff4d4f;
+  border: 2rpx solid #ff4d4f;
+}
+
 /* ======= 弹窗 ======= */
 .dialog-mask {
   position: fixed;
@@ -459,6 +471,16 @@ page {
 .dark .btn.primary {
   background: #07c160;
   color: #fff;
+}
+
+.dark .danger-zone {
+  border-top-color: #444;
+}
+
+.dark .btn.danger {
+  background: #2a2a2a;
+  color: #ff8585;
+  border-color: #ff8585;
 }
 
 .dark .bg-preview-wrap {
