@@ -101,6 +101,19 @@
       </view>
     </view>
 
+    <!-- 课程备注 -->
+    <view class="section">
+      <view class="section-title">课程备注</view>
+      <textarea
+        class="notes-input"
+        placeholder="请输入课程备注信息（如作业、考试提醒等）"
+        value="{{notes}}"
+        maxlength="200"
+        bindinput="onNotesInput"
+      />
+      <view class="notes-count">{{notes.length || 0}}/200</view>
+    </view>
+
     <!-- 操作按钮 -->
     <view class="actions">
       <button class="btn-save" bindtap="onSave">{{isEdit ? '保存修改' : '添加课程'}}</button>

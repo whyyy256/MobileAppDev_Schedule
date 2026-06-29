@@ -74,7 +74,11 @@ Page({
 
     // 个性化设置
     backgroundImage: '',
-    darkModeActive: false
+    darkModeActive: false,
+
+    // 分享卡片
+    showShareCard: false,
+    shareImagePath: ''
   },
 
   _syncing: false,
@@ -504,7 +508,8 @@ Page({
         showCourseDetail: true,
         courseDetail: {
           ...course,
-          weeksText: util.formatWeeks(course.weeks)
+          weeksText: util.formatWeeks(course.weeks),
+          notes: course.notes || ''
         }
       })
     }
@@ -546,5 +551,226 @@ Page({
 
   onImportTap() {
     wx.navigateTo({ url: '/pages/import/import?mode=file' })
+  },
+
+  // ====== 分享课程表 ======
+  onShareTap() {
+    this.setData({ showShareCard: true, shareImagePath: '' })
+    this.generateShareCard()
+  },
+
+  hideShareCard() {
+    this.setData({ showShareCard: false, shareImagePath: '' })
+  },
+
+  generateShareCard() {
+    const query = wx.createSelectorQuery().in(this)
+    query.select('#shareCanvas').fields({ node: true, size: true }).exec((res) => {
+      if (!res[0] || !res[0].node) {
+        wx.showToast({ title: '生成失败', icon: 'none' })
+        return
+      }
+      const canvas = res[0].node
+      const ctx = canvas.getContext('2d')
+      const dpr = wx.getSystemInfoSync().pixelRatio || 1
+      const height = this.computeShareCardHeight()
+      canvas.width = 750 * dpr
+      canvas.height = height * dpr
+      ctx.scale(dpr, dpr)
+      this.drawShareCard(ctx, height)
+      wx.canvasToTempFilePath({
+        canvas,
+        success: (fileRes) => {
+          this.setData({ shareImagePath: fileRes.tempFilePath })
+        },
+        fail: () => {
+          wx.showToast({ title: '生成失败', icon: 'none' })
+        }
+      })
+    })
+  },
+
+  computeShareCardHeight() {
+    const courses = this.data.courses || []
+    const currentWeek = this.data.currentWeek || 1
+    const weekCourses = courses.filter(c => c.weeks && c.weeks.includes(currentWeek))
+    let contentHeight = 300
+    if (weekCourses.length === 0) return 800
+    const groups = {}
+    for (let d = 1; d <= 7; d++) groups[d] = []
+    weekCourses.forEach(c => { if (groups[c.day]) groups[c.day].push(c) })
+    for (let d = 1; d <= 7; d++) {
+      const list = groups[d].sort((a, b) => a.startLesson - b.startLesson)
+      if (!list.length) continue
+      contentHeight += 70
+      contentHeight += list.length * 130
+      contentHeight += 20
+    }
+    return Math.max(800, contentHeight + 80)
+  },
+
+  drawShareCard(ctx, height) {
+    const settings = this.data.settings || {}
+    const courses = this.data.courses || []
+    const currentWeek = this.data.currentWeek || 1
+    const semesterName = settings.semesterName || '我的课程表'
+    const dayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+
+    // 背景
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, 750, height)
+
+    // 顶部装饰条
+    ctx.fillStyle = '#07c160'
+    ctx.fillRect(0, 0, 750, 8)
+
+    // 标题
+    ctx.fillStyle = '#333333'
+    ctx.font = 'bold 54px sans-serif'
+    ctx.textAlign = 'left'
+    ctx.fillText(semesterName, 50, 90)
+
+    ctx.fillStyle = '#07c160'
+    ctx.font = '36px sans-serif'
+    ctx.fillText(`第 ${currentWeek} 周课程表`, 50, 150)
+
+    // 日期范围
+    const startDate = settings.startDate
+    let dateText = ''
+    if (startDate) {
+      const start = new Date(startDate.replace(/-/g, '/'))
+      const weekMs = (currentWeek - 1) * 7 * 24 * 60 * 60 * 1000
+      const weekStart = new Date(start.getTime() + weekMs)
+      const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000)
+      const fmt = d => `${d.getMonth() + 1}月${d.getDate()}日`
+      dateText = `${fmt(weekStart)} ~ ${fmt(weekEnd)}`
+    }
+    ctx.fillStyle = '#999999'
+    ctx.font = '26px sans-serif'
+    ctx.fillText(dateText, 50, 200)
+
+    // 分隔线
+    ctx.strokeStyle = '#eeeeee'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(50, 230)
+    ctx.lineTo(700, 230)
+    ctx.stroke()
+
+    let y = 270
+    const weekCourses = courses.filter(c => c.weeks && c.weeks.includes(currentWeek))
+
+    if (weekCourses.length === 0) {
+      ctx.fillStyle = '#999999'
+      ctx.font = '32px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText('本周暂无课程', 375, y + 100)
+      return
+    }
+
+    const groups = {}
+    for (let d = 1; d <= 7; d++) groups[d] = []
+    weekCourses.forEach(c => { if (groups[c.day]) groups[c.day].push(c) })
+
+    for (let d = 1; d <= 7; d++) {
+      const list = groups[d].sort((a, b) => a.startLesson - b.startLesson)
+      if (!list.length) continue
+
+      // 星期标题
+      ctx.fillStyle = '#333333'
+      ctx.font = 'bold 32px sans-serif'
+      ctx.textAlign = 'left'
+      ctx.fillText(dayNames[d - 1], 50, y + 42)
+      y += 70
+
+      list.forEach(c => {
+        // 卡片背景
+        ctx.fillStyle = '#f8f8f8'
+        this.roundRect(ctx, 50, y, 650, 110, 16)
+        ctx.fill()
+
+        // 彩色左侧条
+        ctx.fillStyle = c.color || '#07c160'
+        this.roundRect(ctx, 50, y, 12, 110, { tl: 16, tr: 0, br: 0, bl: 16 })
+        ctx.fill()
+
+        // 课程名
+        ctx.fillStyle = '#333333'
+        ctx.font = 'bold 32px sans-serif'
+        ctx.textAlign = 'left'
+        ctx.fillText(this.ellipsisText(c.name, 16), 82, y + 50)
+
+        // 节次
+        ctx.fillStyle = '#666666'
+        ctx.font = '24px sans-serif'
+        ctx.fillText(`第 ${c.startLesson}-${c.startLesson + c.lessonCount - 1} 节`, 82, y + 85)
+
+        // 教师/地点
+        const meta = [c.teacher, c.location].filter(Boolean).join(' · ')
+        if (meta) {
+          ctx.fillStyle = '#888888'
+          ctx.font = '24px sans-serif'
+          ctx.textAlign = 'right'
+          ctx.fillText(this.ellipsisText(meta, 18), 680, y + 85)
+        }
+
+        y += 130
+      })
+
+      y += 20
+    }
+
+    // 底部水印
+    ctx.fillStyle = '#cccccc'
+    ctx.font = '22px sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText('课程表小程序', 375, height - 30)
+  },
+
+  roundRect(ctx, x, y, w, h, r) {
+    const radius = typeof r === 'number'
+      ? { tl: r, tr: r, br: r, bl: r }
+      : { tl: 0, tr: 0, br: 0, bl: 0, ...r }
+    ctx.beginPath()
+    ctx.moveTo(x + radius.tl, y)
+    ctx.lineTo(x + w - radius.tr, y)
+    ctx.quadraticCurveTo(x + w, y, x + w, y + radius.tr)
+    ctx.lineTo(x + w, y + h - radius.br)
+    ctx.quadraticCurveTo(x + w, y + h, x + w - radius.br, y + h)
+    ctx.lineTo(x + radius.bl, y + h)
+    ctx.quadraticCurveTo(x, y + h, x, y + h - radius.bl)
+    ctx.lineTo(x, y + radius.tl)
+    ctx.quadraticCurveTo(x, y, x + radius.tl, y)
+    ctx.closePath()
+  },
+
+  ellipsisText(str, maxLen) {
+    if (!str) return ''
+    let len = 0
+    for (let i = 0; i < str.length; i++) {
+      len += str.charCodeAt(i) > 127 ? 2 : 1
+      if (len > maxLen * 2) return str.slice(0, i) + '…'
+    }
+    return str
+  },
+
+  onShareToFriend() {
+    const path = this.data.shareImagePath
+    if (!path) return
+    if (wx.showShareImageMenu) {
+      wx.showShareImageMenu({ path })
+    } else {
+      wx.previewImage({ urls: [path] })
+    }
+  },
+
+  onSaveShareImage() {
+    const path = this.data.shareImagePath
+    if (!path) return
+    wx.saveImageToPhotosAlbum({
+      filePath: path,
+      success: () => wx.showToast({ title: '已保存', icon: 'success' }),
+      fail: () => wx.showToast({ title: '保存失败', icon: 'none' })
+    })
   }
 })

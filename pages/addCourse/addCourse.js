@@ -12,6 +12,7 @@ Page({
     lessonCount: 2, // 连续几节
     weeks: [], // 上课周次
     color: '',
+    notes: '', // 课程备注
 
     // 选项数据
     dayOptions: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
@@ -66,7 +67,8 @@ Page({
           startLesson: course.startLesson || 1,
           lessonCount: course.lessonCount || 2,
           weeks: course.weeks || [],
-          color: course.color || ''
+          color: course.color || '',
+          notes: course.notes || ''
         })
         wx.setNavigationBarTitle({ title: '编辑课程' })
       }
@@ -94,6 +96,11 @@ Page({
   // 地点
   onLocationInput(e) {
     this.setData({ location: e.detail.value })
+  },
+
+  // 备注
+  onNotesInput(e) {
+    this.setData({ notes: e.detail.value })
   },
 
   // 自定义 picker：选择星期
@@ -194,7 +201,7 @@ Page({
 
   // 保存
   onSave() {
-    const { courseName, teacher, location, day, startLesson, lessonCount, weeks, color, isEdit, courseId, maxLessons } = this.data
+    const { courseName, teacher, location, day, startLesson, lessonCount, weeks, color, notes, isEdit, courseId, maxLessons } = this.data
 
     // 验证
     if (!courseName.trim()) {
@@ -220,7 +227,8 @@ Page({
       startLesson,
       lessonCount,
       weeks,
-      color
+      color,
+      notes: notes.trim()
     }
 
     const conflict = util.checkCourseConflict(courseData, isEdit ? courseId : '')

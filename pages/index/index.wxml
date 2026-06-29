@@ -6,16 +6,17 @@
   background="{{darkModeActive ? '#1a1a1a' : '#FFF'}}"
   ext-class="{{darkModeActive ? 'dark' : ''}}"
 >
-  <view slot="left" class="nav-left" bindtap="onSettingsTap">
-    <image class="nav-settings-icon" src="/assets/icons/settings.svg" mode="aspectFit" />
+  <view slot="left" class="nav-left">
+    <image class="nav-settings-icon" src="/assets/icons/settings.svg" mode="aspectFit" bindtap="onSettingsTap" />
+    <image class="nav-share-icon" src="/assets/icons/share.svg" mode="aspectFit" bindtap="onShareTap" />
   </view>
   <view slot="center" class="nav-center">
     <text class="nav-week-nav {{currentWeek <= 1 ? 'disabled' : ''}}" bindtap="onPrevWeek">‹</text>
     <view class="nav-week-text {{currentWeek === todayWeek ? 'nav-week-current' : ''}}" bindtap="showWeekPicker">第 {{currentWeek}} 周</view>
     <text class="nav-week-nav {{currentWeek >= totalWeeks ? 'disabled' : ''}}" bindtap="onNextWeek">›</text>
   </view>
-  <view slot="right" class="nav-right" bindtap="onToggleView">
-    <text class="nav-toggle">{{viewMode === 'week' ? '日' : '周'}}</text>
+  <view slot="right" class="nav-right">
+    <text class="nav-toggle" bindtap="onToggleView">{{viewMode === 'week' ? '日' : '周'}}</text>
   </view>
 </navigation-bar>
 
@@ -116,6 +117,10 @@
       <view class="course-detail-row">
         <text class="course-detail-label">周次</text>
         <text class="course-detail-value">{{courseDetail.weeksText}}</text>
+      </view>
+      <view class="course-detail-row" wx:if="{{courseDetail.notes}}">
+        <text class="course-detail-label">备注</text>
+        <text class="course-detail-value">{{courseDetail.notes}}</text>
       </view>
     </view>
     <view class="course-detail-actions">
@@ -285,6 +290,25 @@
     <view class="import-icon">
       <view class="import-arrow"></view>
       <view class="import-tray"></view>
+    </view>
+  </view>
+</view>
+
+<!-- 分享卡片 canvas（离屏绘制） -->
+<canvas type="2d" id="shareCanvas" class="share-canvas"></canvas>
+
+<!-- 分享卡片预览弹窗 -->
+<view class="share-mask" wx:if="{{showShareCard}}" bindtap="hideShareCard">
+  <view class="share-panel" catchtap="stopBubbling">
+    <view class="share-header">
+      <text class="share-title">课程表分享卡片</text>
+      <text class="share-close" bindtap="hideShareCard">×</text>
+    </view>
+    <image class="share-image" src="{{shareImagePath}}" mode="widthFix" wx:if="{{shareImagePath}}" />
+    <view class="share-loading" wx:if="{{!shareImagePath}}">生成中...</view>
+    <view class="share-actions">
+      <view class="share-btn primary" bindtap="onShareToFriend">分享给好友</view>
+      <view class="share-btn" bindtap="onSaveShareImage">保存到相册</view>
     </view>
   </view>
 </view>
