@@ -195,6 +195,7 @@ Page({
     this.setData({ selectedCell: null })
     this.loadSettings()
     this.loadCourses()
+    getApp().checkReminders()
   },
 
   buildScheduleData() {

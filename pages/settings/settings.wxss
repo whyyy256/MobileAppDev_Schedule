@@ -449,13 +449,24 @@ page {
   color: #aaa;
 }
 
-.dark .input {
+.dark .hint {
+  color: #777;
+}
+
+.dark .picker {
   color: #f0f0f0;
 }
 
 .dark .picker {
   color: #e0e0e0;
   background: #2a2a2a;
+}
+
+.hint {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 16rpx;
+  line-height: 1.5;
 }
 
 .dark .picker.danger {

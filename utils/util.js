@@ -967,6 +967,120 @@ function importBackupFromFile() {
   })
 }
 
+// ====== 上课提醒通知 ======
+const NOTIFICATION_SETTINGS_KEY = 'notification_settings'
+const LAST_REMINDER_PREFIX = 'last_reminder_'
+
+const DEFAULT_NOTIFICATION_SETTINGS = {
+  enabled: false,
+  reminderMinutes: 15
+}
+
+const REMINDER_TIME_OPTIONS = [
+  { label: '课前 5 分钟', value: 5 },
+  { label: '课前 10 分钟', value: 10 },
+  { label: '课前 15 分钟', value: 15 },
+  { label: '课前 30 分钟', value: 30 },
+  { label: '课前 60 分钟', value: 60 }
+]
+
+function getNotificationSettings() {
+  try {
+    return wx.getStorageSync(NOTIFICATION_SETTINGS_KEY) || { ...DEFAULT_NOTIFICATION_SETTINGS }
+  } catch (e) {
+    return { ...DEFAULT_NOTIFICATION_SETTINGS }
+  }
+}
+
+function saveNotificationSettings(settings) {
+  wx.setStorageSync(NOTIFICATION_SETTINGS_KEY, settings)
+}
+
+// 请求微信订阅消息授权；需要将 TEMPLATE_ID 替换为真实的订阅消息模板 ID
+function requestSubscribeMessage() {
+  const TEMPLATE_ID = 'YOUR_REMINDER_TEMPLATE_ID'
+  return new Promise((resolve) => {
+    wx.requestSubscribeMessage({
+      tmplIds: [TEMPLATE_ID],
+      success: (res) => {
+        const settings = getNotificationSettings()
+        settings.subscribedTemplateIds = settings.subscribedTemplateIds || []
+        if (res[TEMPLATE_ID] === 'accept') {
+          if (!settings.subscribedTemplateIds.includes(TEMPLATE_ID)) {
+            settings.subscribedTemplateIds.push(TEMPLATE_ID)
+          }
+          saveNotificationSettings(settings)
+          resolve({ success: true, message: '订阅成功' })
+        } else {
+          resolve({ success: false, message: '需要授权才能接收提醒' })
+        }
+      },
+      fail: (err) => {
+        console.error('requestSubscribeMessage fail', err)
+        resolve({ success: false, message: '订阅失败' })
+      }
+    })
+  })
+}
+
+// 检查并弹出上课提醒（应用内提醒）
+function checkAndShowReminders(options = {}) {
+  const settings = getNotificationSettings()
+  if (!settings.enabled) return
+
+  const { courses, lessonTimes, currentWeek } = options
+  if (!courses || !Array.isArray(courses) || !lessonTimes || !Array.isArray(lessonTimes)) return
+
+  const now = new Date()
+  const todayDay = now.getDay() || 7 // 周一=1 ... 周日=7
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
+  const todayCourses = courses.filter(c => {
+    if (c.day !== todayDay) return false
+    if (!c.weeks || !Array.isArray(c.weeks) || !c.weeks.includes(currentWeek)) return false
+    return true
+  })
+
+  if (todayCourses.length === 0) return
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+  const reminderWindow = settings.reminderMinutes || 15
+
+  let upcomingCourse = null
+  let minDiff = Infinity
+
+  todayCourses.forEach(c => {
+    const idx = (c.startLesson || 1) - 1
+    if (idx < 0 || idx >= lessonTimes.length) return
+    const timeStr = lessonTimes[idx].start
+    if (!timeStr || typeof timeStr !== 'string') return
+    const [h, m] = timeStr.split(':').map(Number)
+    if (isNaN(h) || isNaN(m)) return
+    const startMinutes = h * 60 + m
+    const diff = startMinutes - currentMinutes
+    if (diff > 0 && diff <= reminderWindow && diff < minDiff) {
+      minDiff = diff
+      upcomingCourse = c
+    }
+  })
+
+  if (!upcomingCourse) return
+
+  const courseKey = `${upcomingCourse.day}-${upcomingCourse.startLesson}-${upcomingCourse.name}`
+  const lastKey = `${LAST_REMINDER_PREFIX}${courseKey}`
+  const lastShown = wx.getStorageSync(lastKey)
+  if (lastShown === todayStr) return
+
+  wx.setStorageSync(lastKey, todayStr)
+
+  wx.showModal({
+    title: '上课提醒',
+    content: `还有 ${minDiff} 分钟上课：${upcomingCourse.name}${upcomingCourse.location ? '（' + upcomingCourse.location + '）' : ''}`,
+    showCancel: false,
+    confirmText: '知道了'
+  })
+}
+
 module.exports = {
   DEFAULT_SETTINGS,
   COURSE_COLORS,
@@ -1017,5 +1131,12 @@ module.exports = {
   buildBackupData,
   restoreFromBackup,
   exportBackupToFile,
-  importBackupFromFile
+  importBackupFromFile,
+
+  // 上课提醒
+  getNotificationSettings,
+  saveNotificationSettings,
+  requestSubscribeMessage,
+  checkAndShowReminders,
+  REMINDER_TIME_OPTIONS
 }

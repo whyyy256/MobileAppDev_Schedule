@@ -78,6 +78,26 @@
     <view class="btn" bindtap="exportBackup">导出备份（分享文件）</view>
   </view>
 
+  <!-- 上课提醒 -->
+  <view class="section">
+    <view class="section-title">上课提醒</view>
+
+    <view class="form-item">
+      <text class="label">开启提醒</text>
+      <switch checked="{{notificationEnabled}}" bindchange="onNotificationEnableChange" />
+    </view>
+
+    <view class="form-item">
+      <text class="label">提醒时间</text>
+      <picker mode="selector" range="{{reminderTimeOptions}}" range-key="label" value="{{reminderTimeIndex}}" bindchange="onReminderTimeChange">
+        <view class="picker">{{reminderTimeOptions[reminderTimeIndex].label}}</view>
+      </picker>
+    </view>
+
+    <view class="btn" bindtap="onSubscribeReminder">订阅微信提醒消息</view>
+    <view class="hint">应用内提醒无需订阅；微信订阅消息需在小程序后台配置模板 ID。</view>
+  </view>
+
   <!-- 一天有几节课 -->
     <view class="section">
       <view class="section-title">每天课程节数</view>

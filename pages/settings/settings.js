@@ -12,6 +12,12 @@ Page({
     evening: 3,
     showWeekend: true,
 
+    // 上课提醒
+    notificationEnabled: false,
+    notificationMinutes: 15,
+    reminderTimeIndex: 2,
+    reminderTimeOptions: util.REMINDER_TIME_OPTIONS,
+
     // 个性化设置
     backgroundImage: '',
     darkMode: 'light',
@@ -87,6 +93,9 @@ Page({
     const settings = util.getSettings()
     const semesters = util.getSemesters()
     const currentSemesterId = util.getCurrentSemesterId()
+    const notificationSettings = util.getNotificationSettings()
+    const notificationMinutes = notificationSettings.reminderMinutes || 15
+    const reminderTimeIndex = util.REMINDER_TIME_OPTIONS.findIndex(o => o.value === notificationMinutes)
 
     const holidayConfig = settings.holidayConfig || { holidays: [], workdays: [] }
     const dayNames = ['一', '二', '三', '四', '五', '六', '日']
@@ -113,7 +122,10 @@ Page({
       displayHolidays,
       displayWorkdays,
       semesters,
-      currentSemesterId
+      currentSemesterId,
+      notificationEnabled: notificationSettings.enabled || false,
+      notificationMinutes,
+      reminderTimeIndex: reminderTimeIndex >= 0 ? reminderTimeIndex : 2
     })
   },
 
@@ -495,6 +507,29 @@ Page({
     const m = String(date.getMonth() + 1).padStart(2, '0')
     const d = String(date.getDate()).padStart(2, '0')
     return `${y}-${m}-${d}`
+  },
+
+  // ====== 上课提醒 ======
+  onNotificationEnableChange(e) {
+    const enabled = e.detail.value
+    const settings = util.getNotificationSettings()
+    settings.enabled = enabled
+    util.saveNotificationSettings(settings)
+    this.setData({ notificationEnabled: enabled })
+  },
+
+  onReminderTimeChange(e) {
+    const index = parseInt(e.detail.value, 10)
+    const minutes = util.REMINDER_TIME_OPTIONS[index].value
+    const settings = util.getNotificationSettings()
+    settings.reminderMinutes = minutes
+    util.saveNotificationSettings(settings)
+    this.setData({ notificationMinutes: minutes, reminderTimeIndex: index })
+  },
+
+  async onSubscribeReminder() {
+    const result = await util.requestSubscribeMessage()
+    wx.showToast({ title: result.message, icon: result.success ? 'success' : 'none' })
   },
 
   // ====== 清除当前课表 ======
