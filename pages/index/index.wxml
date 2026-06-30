@@ -69,7 +69,8 @@
       <text class="picker-confirm" bindtap="confirmTimeSelect">确定</text>
     </view>
     <view class="time-select-body">
-      <scroll-view class="time-select-col" scroll-y enhanced show-scrollbar="{{false}}">
+      <scroll-view class="time-select-col" scroll-y enhanced show-scrollbar="{{false}}" scroll-top="{{hourScrollTop}}">
+        <view class="time-select-spacer"></view>
         <view
           wx:for="{{hours}}"
           wx:key="*this"
@@ -78,9 +79,11 @@
           data-type="hour"
           bindtap="onTimeSelectItemTap"
         >{{item}}</view>
+        <view class="time-select-spacer"></view>
       </scroll-view>
       <text class="time-select-colon">:</text>
-      <scroll-view class="time-select-col" scroll-y enhanced show-scrollbar="{{false}}">
+      <scroll-view class="time-select-col" scroll-y enhanced show-scrollbar="{{false}}" scroll-top="{{minuteScrollTop}}">
+        <view class="time-select-spacer"></view>
         <view
           wx:for="{{minutes}}"
           wx:key="*this"
@@ -89,6 +92,7 @@
           data-type="minute"
           bindtap="onTimeSelectItemTap"
         >{{item}}</view>
+        <view class="time-select-spacer"></view>
       </scroll-view>
     </view>
   </view>

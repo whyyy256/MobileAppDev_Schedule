@@ -69,6 +69,8 @@ Page({
     timeSelectMode: 'start', // 'start' 或 'end'
     selectHour: '08',
     selectMinute: '00',
+    hourScrollTop: 0,
+    minuteScrollTop: 0,
     hours: Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')),
     minutes: Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')),
 
@@ -438,23 +440,53 @@ Page({
     this.setData({ showTimeEdit: false })
   },
 
+  computeTimeScrollTop(index, totalCount) {
+    const itemHeightRpx = 80
+    const maxScrollRpx = Math.max(0, (totalCount - 1) * itemHeightRpx)
+    const scrollRpx = Math.max(0, Math.min(maxScrollRpx, index * itemHeightRpx))
+    const systemInfo = wx.getSystemInfoSync()
+    return scrollRpx * systemInfo.screenWidth / 750
+  },
+
   onEditStartTap() {
     const [hour, minute] = this.data.editStart.split(':')
+    const hourIndex = parseInt(hour, 10)
+    const minuteIndex = parseInt(minute, 10)
     this.setData({
       showTimeSelect: true,
       timeSelectMode: 'start',
       selectHour: hour,
-      selectMinute: minute
+      selectMinute: minute,
+      hourScrollTop: 0,
+      minuteScrollTop: 0
+    }, () => {
+      setTimeout(() => {
+        this.setData({
+          hourScrollTop: this.computeTimeScrollTop(hourIndex, 24),
+          minuteScrollTop: this.computeTimeScrollTop(minuteIndex, 60)
+        })
+      }, 50)
     })
   },
 
   onEditEndTap() {
     const [hour, minute] = this.data.editEnd.split(':')
+    const hourIndex = parseInt(hour, 10)
+    const minuteIndex = parseInt(minute, 10)
     this.setData({
       showTimeSelect: true,
       timeSelectMode: 'end',
       selectHour: hour,
-      selectMinute: minute
+      selectMinute: minute,
+      hourScrollTop: 0,
+      minuteScrollTop: 0
+    }, () => {
+      setTimeout(() => {
+        this.setData({
+          hourScrollTop: this.computeTimeScrollTop(hourIndex, 24),
+          minuteScrollTop: this.computeTimeScrollTop(minuteIndex, 60)
+        })
+      }, 50)
     })
   },
 
@@ -498,6 +530,9 @@ Page({
       settings: newSettings,
       lessonTimes: newLessonTimes,
       showTimeEdit: false
+    }, () => {
+      // 刷新课程表，确保课程卡片上的时间段同步更新
+      this.buildScheduleData()
     })
   },
 
