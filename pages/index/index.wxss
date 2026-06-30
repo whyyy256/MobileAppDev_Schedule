@@ -741,9 +741,14 @@ page {
 
 .day-view-empty {
   text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
   padding: 80rpx 0;
   font-size: 30rpx;
   color: #999;
+  box-sizing: border-box;
 }
 
 .day-view-item {
